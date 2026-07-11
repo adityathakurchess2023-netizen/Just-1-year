@@ -24,6 +24,8 @@
     --insight-bg: rgba(59,130,246,0.08);
     --bg1: #0a1220;
     --bg2: #030509;
+    --app-max-width: 560px;
+    --nav-max-width: 560px;
   }
   html[data-theme="crimson"] {
     --accent: #e0483f; --accent-light: #ff9d8a; --border: #7a2a2a;
@@ -46,12 +48,12 @@
     --insight-bg: rgba(200,200,200,0.07); --bg1: #14161a; --bg2: #050608;
   }
 
-  #systemView, #yearView, #plannerView {
-    width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: stretch;
+  #systemView, #yearView, #plannerView, #mockView {
+    width: 100%; max-width: var(--app-max-width); display: flex; flex-direction: column; align-items: stretch;
   }
 
   .tab-nav {
-    display: flex; gap: 8px; width: 100%; max-width: 560px; margin-bottom: 14px;
+    display: flex; gap: 8px; width: 100%; max-width: var(--nav-max-width); margin-bottom: 14px;
   }
   .tab-btn {
     flex: 1;
@@ -97,7 +99,7 @@
 
   .panel {
     width: 100%;
-    max-width: 560px;
+    max-width: var(--nav-max-width);
     background: linear-gradient(180deg, rgba(15,25,45,0.85), rgba(6,10,20,0.9));
     border: 1px solid #2a4a7a;
     border-radius: 10px;
@@ -112,6 +114,31 @@
     border-radius: 10px;
     border: 1px solid rgba(100,180,255,0.15);
     pointer-events: none;
+  }
+
+  /* ---------- Landscape / wide-screen layout: fill available width with a multi-column dashboard ---------- */
+  @media (min-width: 700px) {
+    :root {
+      --app-max-width: min(1500px, 96vw);
+      --nav-max-width: min(900px, 96vw);
+    }
+    body { padding: 20px 24px 60px; }
+    #systemView, #yearView, #plannerView, #mockView {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      grid-auto-rows: min-content;
+      align-items: start;
+      gap: 16px;
+    }
+    #systemView > .panel,
+    #yearView > .panel,
+    #plannerView > .panel,
+    #mockView > .panel {
+      margin-bottom: 0;
+      max-width: none;
+    }
+    #yearView { grid-template-columns: 1fr; }
+    #yearView > .panel { max-width: 760px; margin: 0 auto; }
   }
 
   .system-title {
@@ -445,7 +472,7 @@
 </div>
 <!-- /systemView -->
 
-<div id="yearView" style="display:none;width:100%;max-width:560px;">
+<div id="yearView" style="display:none;">
 
   <div class="panel">
     <h1 style="font-size:20px;font-weight:800;letter-spacing:0.06em;margin:0 0 4px;text-align:center;font-family:'Orbitron',sans-serif;color:#7fc3ff;text-shadow:0 0 10px rgba(100,180,255,0.5);">JUST ONE YEAR</h1>
@@ -487,7 +514,7 @@
 </div>
 <!-- /yearView -->
 
-<div id="plannerView" style="display:none;width:100%;max-width:560px;">
+<div id="plannerView" style="display:none;">
 
   <div class="panel">
     <div style="display:flex;align-items:center;justify-content:space-between;">
@@ -579,7 +606,7 @@
 </div>
 <!-- /plannerView -->
 
-<div id="mockView" style="display:none;width:100%;max-width:560px;">
+<div id="mockView" style="display:none;">
 
   <div class="panel">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
