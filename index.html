@@ -2946,12 +2946,81 @@ function jarvisLogMockScore(type, subjectLabel, score, max) {
   }
 }
 
+function jarvisMockSummary(type, subjectLabel) {
+  const entries = mockData
+    .filter(e => (type === "full" ? e.type === "full" : e.type === "sectional" && e.subject === subjectLabel))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
+  if (!entries.length) return "";
+  const last5 = entries.slice(-5);
+  const avgPct = Math.round((last5.reduce((s, e) => s + mockPct(e), 0) / last5.length) * 10) / 10;
+  const prevPct = entries.length > 1 ? mockPct(entries[entries.length - 2]) : null;
+  let trend = "";
+  if (prevPct !== null) {
+    const diff = Math.round((mockPct(entries[entries.length - 1]) - prevPct) * 10) / 10;
+    trend = Math.abs(diff) < 0.5 ? " Flat vs last time." : diff > 0 ? ` Up ${diff}% vs last time.` : ` Down ${Math.abs(diff)}% vs last time.`;
+  }
+  return ` You've logged ${entries.length} of these — last ${last5.length} average ${avgPct}%.${trend}`;
+}
+
 function jarvisStatsSummary() {
   const lvl = levelFromXP(state.totalXP);
   return `You're Level ${lvl.level}, ${state.streak}-day streak with a best of ${state.bestStreak}, discipline at ${state.discipline} out of 100, and ${state.totalDays} total days logged.`;
 }
 
-const JARVIS_HELP_TEXT = `I can: switch tabs (say "open planner" or "open mocks"), control the study timer (start, pause, reset), change the theme (say "switch to emerald theme"), mark quests done (say "mark workout done"), log mock scores (say "log sectional mock 78 out of 100 for maths" or "log full mock 210 out of 300"), read back your stats ("how am I doing"), and remember things you tell me (say "remember that..." or "what do you remember").`;
+/* ---- timer customization via command ---- */
+function jarvisSetTimerCustom(work, brk) {
+  const w = Number(work), b = Number(brk);
+  if (w > 0) timerSettings.work = w;
+  if (b > 0) timerSettings.break = b;
+  if (!(w > 0) && !(b > 0)) return null;
+  try { localStorage.setItem(TIMER_SETTINGS_KEY, JSON.stringify(timerSettings)); } catch (e) {}
+  if (document.getElementById("workMinBtn")) applyTimerSettingsUI();
+  if (!timerRunning) {
+    timerSeconds = timerMode === "work" ? timerSettings.work * 60 : timerSettings.break * 60;
+    if (document.getElementById("timerDisplay")) timerRenderDisplay();
+  }
+  const parts = [];
+  if (w > 0) parts.push(`${w} min work`);
+  if (b > 0) parts.push(`${b} min break`);
+  return `Timer set to ${parts.join(", ")}.`;
+}
+
+/* ---- Year Tracker day marking via command ---- */
+function jarvisResolveDate(whenText) {
+  const now = new Date();
+  const lower = (whenText || "today").toLowerCase();
+  if (lower.includes("yesterday")) { const d = new Date(now); d.setDate(d.getDate() - 1); return d; }
+  if (lower.includes("tomorrow")) { const d = new Date(now); d.setDate(d.getDate() + 1); return d; }
+  const parsed = Date.parse(whenText);
+  if (whenText && !lower.includes("today") && !isNaN(parsed)) return new Date(parsed);
+  return now;
+}
+
+function jarvisResolveColor(text) {
+  const lower = (text || "").toLowerCase();
+  if (/\bgreen\b|\b15\s*(hrs?|hours?)?\b/.test(lower)) return "green";
+  if (/\byellow\b|\b12\s*(hrs?|hours?)?\b/.test(lower)) return "yellow";
+  if (/\bblue\b|(?:^|\D)8\s*(hrs?|hours?)?\b/.test(lower)) return "blue";
+  if (/\bred\b|under\s*8|less than\s*8|didn'?t reach/.test(lower)) return "red";
+  if (/\bnone\b|\bclear\b|\bblank\b|\bunmark\b/.test(lower)) return "none";
+  return null;
+}
+
+function jarvisMarkYearDay(dateObj, color) {
+  const isKnownMonth = YEAR_MONTHS.some(m => m.year === dateObj.getFullYear() && m.month === dateObj.getMonth());
+  if (!isKnownMonth) return "That date is outside the tracked year (Jul 2026–Jul 2027).";
+  const key = yearCellKey(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+  if (color === "none") delete yearCells[key];
+  else yearCells[key] = color;
+  saveYearCells(yearCells);
+  if (document.getElementById("yearSvg")) renderYearTracker();
+  const dateLabel = todayStr(dateObj);
+  return color === "none"
+    ? `Cleared the Year Tracker entry for ${dateLabel}.`
+    : `Marked ${dateLabel} as ${color} on the Year Tracker.`;
+}
+
+const JARVIS_HELP_TEXT = `I can: switch tabs (say "open planner" or "open mocks"), control the study timer including custom lengths (say "start timer", "set timer to 45 work 10 break"), change the theme (say "switch to emerald theme"), mark quests done (say "mark workout done"), mark Year Tracker days (say "mark today green" or "mark yesterday as 8 hours"), log mock scores (say "log sectional mock 78 out of 100 for maths" or "log full mock 210 out of 300"), read back your stats ("how am I doing"), and remember things you tell me (say "remember that..." or "what do you remember").`;
 
 async function jarvisHandleCommand(raw) {
   const text = raw.trim();
@@ -2991,6 +3060,38 @@ async function jarvisHandleCommand(raw) {
     return;
   }
 
+  // timer customization (set/change duration) — checked before start/pause/reset
+  if (/\btimer\b/.test(lower) && /\b(set|change|customize|update|make)\b/.test(lower)) {
+    const workMatch = lower.match(/(\d+)\s*(?:min(?:ute)?s?)?\s*(?:work|study|focus)/);
+    const breakMatch = lower.match(/(\d+)\s*(?:min(?:ute)?s?)?\s*(?:break|rest)/);
+    let work = workMatch ? Number(workMatch[1]) : null;
+    let brk = breakMatch ? Number(breakMatch[1]) : null;
+    if (!work && !brk) {
+      const nums = lower.match(/\d+/g);
+      if (nums && nums.length >= 1) work = Number(nums[0]);
+      if (nums && nums.length >= 2) brk = Number(nums[1]);
+    }
+    if (work || brk) {
+      const msg = jarvisSetTimerCustom(work, brk);
+      jarvisRespond(msg || "Didn't catch what to set the timer to.");
+      jarvisSetStatus("Tap the mic and speak.");
+      return;
+    }
+  }
+
+  // Year Tracker day marking (e.g. "mark today green", "log yesterday as 8 hours")
+  if (/\b(mark|set|log)\b/.test(lower) && /\b(today|yesterday|tomorrow)\b/.test(lower)) {
+    const color = jarvisResolveColor(lower);
+    if (color) {
+      const when = lower.includes("yesterday") ? "yesterday" : lower.includes("tomorrow") ? "tomorrow" : "today";
+      const dateObj = jarvisResolveDate(when);
+      const msg = jarvisMarkYearDay(dateObj, color);
+      jarvisRespond(msg);
+      jarvisSetStatus("Tap the mic and speak.");
+      return;
+    }
+  }
+
   // timer
   if (/\bstart\b.*\btimer\b/.test(lower)) {
     if (!timerRunning) timerToggle();
@@ -3020,12 +3121,12 @@ async function jarvisHandleCommand(raw) {
       const isFull = /\bfull\b/.test(lower);
       if (isFull) {
         jarvisLogMockScore("full", null, score, max);
-        jarvisRespond(`Logged: Full Mock, ${score} out of ${max}. That's ${Math.round((score / max) * 1000) / 10}%.`);
+        jarvisRespond(`Logged: Full Mock, ${score} out of ${max}. That's ${Math.round((score / max) * 1000) / 10}%.` + jarvisMockSummary("full", null));
       } else {
         const subj = jarvisFindSubject(lower);
         if (subj) {
           jarvisLogMockScore("sectional", subj.label, score, max);
-          jarvisRespond(`Logged: ${subj.label} sectional, ${score} out of ${max}. That's ${Math.round((score / max) * 1000) / 10}%.`);
+          jarvisRespond(`Logged: ${subj.label} sectional, ${score} out of ${max}. That's ${Math.round((score / max) * 1000) / 10}%.` + jarvisMockSummary("sectional", subj.label));
         } else {
           jarvisRespond(`Got ${score} out of ${max} — which subject was that for?`);
           jarvisSetStatus("Tap the mic and speak.");
@@ -3095,13 +3196,16 @@ async function jarvisHandleCommand(raw) {
     "Convert the user's spoken command into exactly ONE JSON object, nothing else, no markdown. Valid shapes:\n" +
     '{"action":"switch_tab","tab":"system|year|planner|mock"}\n' +
     '{"action":"timer","command":"start|pause|reset"}\n' +
+    '{"action":"set_timer","work":<number or null>,"break":<number or null>}\n' +
     '{"action":"theme","name":"blue|crimson|emerald|violet|mono"}\n' +
     '{"action":"complete_quest","query":"<text describing the quest>"}\n' +
+    '{"action":"mark_day","when":"today|yesterday|tomorrow","color":"red|blue|yellow|green|none"}\n' +
     '{"action":"log_mock","type":"sectional|full","subject":"<subject label or null>","score":<number>,"max":<number>}\n' +
     '{"action":"remember","fact":"<text to remember>"}\n' +
     '{"action":"recall_memory"}\n' +
     '{"action":"stats"}\n' +
     '{"action":"reply","text":"<a short spoken reply — for anything conversational, a question, or that matches no other action>"}\n' +
+    "For set_timer, colors map from hours as: 15hrs=green, 12hrs=yellow, 8hrs=blue, under 8hrs=red. " +
     "Pick the single best-fitting action.";
 
   const notesContext = jarvisNotes.length ? `Things the user has told you to remember: ${jarvisNotes.join("; ")}.` : "";
@@ -3152,6 +3256,18 @@ function jarvisExecuteAction(action) {
       else jarvisRespond("Didn't catch what to do with the timer.");
       break;
     }
+    case "set_timer": {
+      const msg = jarvisSetTimerCustom(action.work, action.break);
+      jarvisRespond(msg || "Didn't catch what to set the timer to.");
+      break;
+    }
+    case "mark_day": {
+      const color = jarvisResolveColor(action.color || "");
+      if (!color) { jarvisRespond("Didn't catch which color to mark that day."); break; }
+      const dateObj = jarvisResolveDate(action.when || "today");
+      jarvisRespond(jarvisMarkYearDay(dateObj, color));
+      break;
+    }
     case "theme": {
       const t = THEMES.find(th => th.id === action.name);
       if (t) { applyTheme(t.id); jarvisRespond(`Theme set to ${t.label}.`); }
@@ -3174,12 +3290,12 @@ function jarvisExecuteAction(action) {
       if (!score && score !== 0 || !max) { jarvisRespond("I need a valid score and max marks to log that."); break; }
       if (action.type === "full") {
         jarvisLogMockScore("full", null, score, max);
-        jarvisRespond(`Logged: Full Mock, ${score} out of ${max}.`);
+        jarvisRespond(`Logged: Full Mock, ${score} out of ${max}.` + jarvisMockSummary("full", null));
       } else {
         const subj = action.subject && mockSettings.subjects.find(s => s.label.toLowerCase() === String(action.subject).toLowerCase());
         if (subj) {
           jarvisLogMockScore("sectional", subj.label, score, max);
-          jarvisRespond(`Logged: ${subj.label} sectional, ${score} out of ${max}.`);
+          jarvisRespond(`Logged: ${subj.label} sectional, ${score} out of ${max}.` + jarvisMockSummary("sectional", subj.label));
         } else {
           jarvisRespond(`Got ${score} out of ${max} — which subject was that for?`);
         }
