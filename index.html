@@ -682,6 +682,34 @@
 </div>
 <!-- /mockView -->
 
+<!-- ---------- JARVIS voice assistant widget ---------- -->
+<div id="jarvisFab" onclick="toggleJarvisPanel()" title="Talk to JARVIS" style="position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent,#3b82f6),var(--accent-light,#7fc3ff));box-shadow:0 0 20px var(--panel-glow,rgba(60,140,255,0.3)),0 4px 14px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;z-index:999;border:2px solid rgba(255,255,255,0.2);">🎙️</div>
+
+<div id="jarvisPanel" style="display:none;position:fixed;bottom:88px;right:20px;width:340px;max-width:92vw;max-height:72vh;background:linear-gradient(180deg, rgba(15,25,45,0.97), rgba(6,10,20,0.98));border:1px solid var(--border,#2a4a7a);border-radius:12px;box-shadow:0 0 30px var(--panel-glow,rgba(60,140,255,0.2));z-index:999;flex-direction:column;overflow:hidden;">
+  <div style="padding:12px 14px;border-bottom:1px solid #223c60;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div style="font-family:'Orbitron',sans-serif;font-size:12px;letter-spacing:0.12em;color:var(--accent-light,#7fc3ff);">🤖 JARVIS</div>
+    <div style="display:flex;gap:6px;">
+      <button onclick="toggleJarvisMemoryView()" title="Memory notes" style="background:none;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:3px 7px;font-size:11px;cursor:pointer;">🧠</button>
+      <button onclick="jarvisClearChat()" title="Clear chat view" style="background:none;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:3px 7px;font-size:11px;cursor:pointer;">🗑</button>
+      <button onclick="toggleJarvisPanel()" style="background:none;border:none;color:#7c93b8;font-size:16px;cursor:pointer;line-height:1;">✕</button>
+    </div>
+  </div>
+
+  <div id="jarvisMemoryRow" style="display:none;padding:10px 14px;border-bottom:1px solid #223c60;background:#0d1a2e;flex-shrink:0;max-height:160px;overflow-y:auto;">
+    <div style="font-size:10px;color:#7c93b8;margin-bottom:6px;letter-spacing:0.05em;">THINGS I'VE BEEN TOLD TO REMEMBER</div>
+    <div id="jarvisNotesList" style="font-size:11px;color:#cfe3ff;line-height:1.6;"></div>
+    <button onclick="jarvisForgetAll()" style="margin-top:8px;background:none;border:1px solid #7a2a2a;color:#e0483f;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;">Forget everything</button>
+  </div>
+
+  <div id="jarvisLog" style="flex:1;overflow-y:auto;padding:10px 14px;font-size:12.5px;line-height:1.5;min-height:120px;"></div>
+
+  <div style="padding:10px 14px;border-top:1px solid #223c60;display:flex;gap:8px;align-items:center;flex-shrink:0;">
+    <button id="jarvisMicBtn" onclick="jarvisToggleListen()" style="width:38px;height:38px;border-radius:50%;background:#152238;border:1px solid #2a4a7a;color:#7fc3ff;font-size:16px;cursor:pointer;flex-shrink:0;">🎙️</button>
+    <div id="jarvisStatus" style="font-size:11px;color:#6c86ad;flex:1;">Tap the mic and speak.</div>
+  </div>
+</div>
+<!-- /jarvis widget -->
+
 <div class="modal-bg" id="bossModal">
   <div class="modal">
     <h3>⚔ BOSS BATTLE</h3>
@@ -1164,6 +1192,8 @@ function exportData() {
     theme: localStorage.getItem(THEME_KEY) || "blue",
     mockSettings: mockSettings,
     mockData: mockData,
+    jarvisNotes: jarvisNotes,
+    jarvisLog: jarvisLogEntries,
   };
   const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -1224,6 +1254,14 @@ function importData(file) {
         if (Array.isArray(parsed.mockData)) {
           mockData = parsed.mockData;
           saveMockDataToStorage();
+        }
+        if (Array.isArray(parsed.jarvisNotes)) {
+          jarvisNotes = parsed.jarvisNotes;
+          jarvisSaveNotes();
+        }
+        if (Array.isArray(parsed.jarvisLog)) {
+          jarvisLogEntries = parsed.jarvisLog;
+          jarvisSaveLog();
         }
         renderMockView();
       }
@@ -2692,6 +2730,486 @@ function renderMockView() {
 
   renderMockStats();
   renderMockHistory();
+}
+
+/* ---------- JARVIS voice assistant ---------- */
+const JARVIS_LOG_KEY = "solo-leveling-jarvis-log";
+const JARVIS_NOTES_KEY = "solo-leveling-jarvis-notes";
+
+let jarvisLogEntries = jarvisLoadLog();
+let jarvisNotes = jarvisLoadNotes();
+let jarvisRecognition = null;
+let jarvisListening = false;
+
+function jarvisLoadLog() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(JARVIS_LOG_KEY));
+    if (Array.isArray(parsed)) return parsed;
+  } catch (e) {}
+  return [];
+}
+function jarvisSaveLog() {
+  try {
+    // cap stored history so localStorage doesn't grow forever
+    if (jarvisLogEntries.length > 200) jarvisLogEntries = jarvisLogEntries.slice(-200);
+    localStorage.setItem(JARVIS_LOG_KEY, JSON.stringify(jarvisLogEntries));
+  } catch (e) {}
+}
+function jarvisLoadNotes() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(JARVIS_NOTES_KEY));
+    if (Array.isArray(parsed)) return parsed;
+  } catch (e) {}
+  return [];
+}
+function jarvisSaveNotes() {
+  try { localStorage.setItem(JARVIS_NOTES_KEY, JSON.stringify(jarvisNotes)); } catch (e) {}
+}
+
+function toggleJarvisPanel() {
+  const panel = document.getElementById("jarvisPanel");
+  const show = panel.style.display === "none" || !panel.style.display;
+  panel.style.display = show ? "flex" : "none";
+  if (show) {
+    renderJarvisLog();
+    if (jarvisLogEntries.length === 0) {
+      const name = state.playerName || document.getElementById("playerName")?.textContent || "Cadet";
+      jarvisRespond(`Systems online. I'm JARVIS — say "what can you do" any time you want a reminder of my commands, ${name}.`);
+    }
+  }
+}
+
+function toggleJarvisMemoryView() {
+  const row = document.getElementById("jarvisMemoryRow");
+  const show = row.style.display === "none" || !row.style.display;
+  row.style.display = show ? "block" : "none";
+  if (show) renderJarvisNotes();
+}
+
+function renderJarvisNotes() {
+  const wrap = document.getElementById("jarvisNotesList");
+  if (!jarvisNotes.length) {
+    wrap.innerHTML = `<span style="color:#5c7699;">Nothing yet — say "remember that ..." and I'll keep it.</span>`;
+    return;
+  }
+  wrap.innerHTML = jarvisNotes.map(n => `• ${n.replace(/</g, "&lt;")}`).join("<br>");
+}
+
+function jarvisForgetAll() {
+  if (!confirm("Clear everything JARVIS remembers (notes + chat history)? This can't be undone.")) return;
+  jarvisNotes = [];
+  jarvisLogEntries = [];
+  jarvisSaveNotes();
+  jarvisSaveLog();
+  renderJarvisNotes();
+  renderJarvisLog();
+}
+
+function jarvisClearChat() {
+  jarvisLogEntries = [];
+  jarvisSaveLog();
+  renderJarvisLog();
+}
+
+function renderJarvisLog() {
+  const log = document.getElementById("jarvisLog");
+  if (!jarvisLogEntries.length) {
+    log.innerHTML = `<div style="color:#5c7699;">Tap the mic and say something — try "what can you do".</div>`;
+    return;
+  }
+  log.innerHTML = jarvisLogEntries.slice(-40).map(e => {
+    const mine = e.role === "user";
+    return `<div style="margin-bottom:8px;display:flex;${mine ? "justify-content:flex-end;" : ""}">
+      <div style="max-width:85%;padding:7px 10px;border-radius:8px;${mine ? "background:#152238;color:#eaf4ff;" : "background:rgba(59,130,246,0.12);color:#cfe3ff;border:1px solid rgba(100,180,255,0.2);"}">
+        ${e.text.replace(/</g, "&lt;")}
+      </div>
+    </div>`;
+  }).join("");
+  log.scrollTop = log.scrollHeight;
+}
+
+function jarvisPushLog(role, text) {
+  jarvisLogEntries.push({ role, text, ts: new Date().toISOString() });
+  jarvisSaveLog();
+  renderJarvisLog();
+}
+
+function jarvisSpeak(text) {
+  try {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1.0;
+    utter.pitch = 0.9;
+    window.speechSynthesis.speak(utter);
+  } catch (e) {}
+}
+
+function jarvisRespond(text) {
+  jarvisPushLog("jarvis", text);
+  jarvisSpeak(text);
+}
+
+function jarvisSetStatus(text) {
+  const el = document.getElementById("jarvisStatus");
+  if (el) el.textContent = text;
+}
+
+/* ---- speech recognition setup ---- */
+function jarvisInitRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  const rec = new SR();
+  rec.lang = "en-IN";
+  rec.continuous = false;
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+
+  rec.onstart = () => {
+    jarvisListening = true;
+    document.getElementById("jarvisMicBtn").style.background = "#a3273a";
+    jarvisSetStatus("Listening…");
+  };
+  rec.onend = () => {
+    jarvisListening = false;
+    document.getElementById("jarvisMicBtn").style.background = "#152238";
+    jarvisSetStatus("Tap the mic and speak.");
+  };
+  rec.onerror = (e) => {
+    jarvisListening = false;
+    document.getElementById("jarvisMicBtn").style.background = "#152238";
+    jarvisSetStatus(e.error === "not-allowed" ? "Mic permission denied." : "Didn't catch that — try again.");
+  };
+  rec.onresult = (e) => {
+    const transcript = e.results[0][0].transcript.trim();
+    if (!transcript) return;
+    jarvisPushLog("user", transcript);
+    jarvisHandleCommand(transcript);
+  };
+  return rec;
+}
+
+function jarvisToggleListen() {
+  if (!jarvisRecognition) jarvisRecognition = jarvisInitRecognition();
+  if (!jarvisRecognition) {
+    jarvisSetStatus("Voice input isn't supported in this browser — try Edge or Chrome.");
+    return;
+  }
+  if (!location.protocol.startsWith("https") && location.hostname !== "localhost") {
+    jarvisSetStatus("Voice needs HTTPS hosting to work.");
+    return;
+  }
+  if (jarvisListening) {
+    jarvisRecognition.stop();
+  } else {
+    try { jarvisRecognition.start(); } catch (e) {}
+  }
+}
+
+/* ---- command understanding ---- */
+function jarvisWordOverlap(fragment, label) {
+  const stop = new Set(["the","a","an","to","of","for","and","my","is","was","on","in","at","i","me","it"]);
+  const fWords = fragment.toLowerCase().split(/\W+/).filter(w => w.length >= 3 && !stop.has(w));
+  const lLower = label.toLowerCase();
+  return fWords.reduce((score, w) => score + (lLower.includes(w) ? 1 : 0), 0);
+}
+
+function jarvisFindQuest(fragment) {
+  const quests = questListForDate(new Date());
+  let best = null, bestScore = 0;
+  quests.forEach(q => {
+    const score = jarvisWordOverlap(fragment, q.label);
+    if (score > bestScore) { bestScore = score; best = q; }
+  });
+  return bestScore > 0 ? best : null;
+}
+
+function jarvisFindSubject(text) {
+  const lower = text.toLowerCase();
+  return mockSettings.subjects.find(s => lower.includes(s.label.toLowerCase())) || null;
+}
+
+function jarvisLogMockScore(type, subjectLabel, score, max) {
+  mockData.push({
+    id: "mock_" + Date.now(),
+    date: todayStr(new Date()),
+    type,
+    subject: type === "sectional" ? subjectLabel : null,
+    score,
+    max,
+    notes: "Logged via JARVIS",
+    createdAt: new Date().toISOString(),
+  });
+  saveMockDataToStorage();
+  if (document.getElementById("mockView") && document.getElementById("mockView").style.display !== "none") {
+    renderMockView();
+  }
+}
+
+function jarvisStatsSummary() {
+  const lvl = levelFromXP(state.totalXP);
+  return `You're Level ${lvl.level}, ${state.streak}-day streak with a best of ${state.bestStreak}, discipline at ${state.discipline} out of 100, and ${state.totalDays} total days logged.`;
+}
+
+const JARVIS_HELP_TEXT = `I can: switch tabs (say "open planner" or "open mocks"), control the study timer (start, pause, reset), change the theme (say "switch to emerald theme"), mark quests done (say "mark workout done"), log mock scores (say "log sectional mock 78 out of 100 for maths" or "log full mock 210 out of 300"), read back your stats ("how am I doing"), and remember things you tell me (say "remember that..." or "what do you remember").`;
+
+async function jarvisHandleCommand(raw) {
+  const text = raw.trim();
+  const lower = text.toLowerCase();
+  jarvisSetStatus("Thinking…");
+
+  // help
+  if (/\bwhat can you do\b|\bhelp\b/.test(lower)) {
+    jarvisRespond(JARVIS_HELP_TEXT);
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+
+  // navigation
+  const navMap = [
+    { re: /\b(system|home|dashboard)\b/, tab: "system", label: "System" },
+    { re: /\byear\b|\btracker\b/, tab: "year", label: "Year Tracker" },
+    { re: /\bplanner\b|\bschedule\b/, tab: "planner", label: "Planner" },
+    { re: /\bmocks?\b/, tab: "mock", label: "Mocks" },
+  ];
+  if (/\b(open|go to|switch to|show)\b/.test(lower)) {
+    const nav = navMap.find(n => n.re.test(lower));
+    if (nav) {
+      switchTab(nav.tab);
+      jarvisRespond(`Opening ${nav.label}.`);
+      jarvisSetStatus("Tap the mic and speak.");
+      return;
+    }
+  }
+
+  // theme
+  const themeMatch = THEMES.find(t => lower.includes(t.id) || lower.includes(t.label.toLowerCase()));
+  if (themeMatch && lower.includes("theme")) {
+    applyTheme(themeMatch.id);
+    jarvisRespond(`Theme set to ${themeMatch.label}.`);
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+
+  // timer
+  if (/\bstart\b.*\btimer\b/.test(lower)) {
+    if (!timerRunning) timerToggle();
+    jarvisRespond("Timer started.");
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+  if (/\b(pause|stop)\b.*\btimer\b/.test(lower)) {
+    if (timerRunning) timerToggle();
+    jarvisRespond("Timer paused.");
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+  if (/\breset\b.*\btimer\b/.test(lower)) {
+    timerReset();
+    jarvisRespond("Timer reset.");
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+
+  // mock score logging — look for a "X out of Y" / "X/Y" pattern anywhere
+  if (/\bmock\b/.test(lower)) {
+    const scoreMatch = lower.match(/(\d+(?:\.\d+)?)\s*(?:out of|of|\/)\s*(\d+(?:\.\d+)?)/);
+    if (scoreMatch) {
+      const score = Number(scoreMatch[1]);
+      const max = Number(scoreMatch[2]);
+      const isFull = /\bfull\b/.test(lower);
+      if (isFull) {
+        jarvisLogMockScore("full", null, score, max);
+        jarvisRespond(`Logged: Full Mock, ${score} out of ${max}. That's ${Math.round((score / max) * 1000) / 10}%.`);
+      } else {
+        const subj = jarvisFindSubject(lower);
+        if (subj) {
+          jarvisLogMockScore("sectional", subj.label, score, max);
+          jarvisRespond(`Logged: ${subj.label} sectional, ${score} out of ${max}. That's ${Math.round((score / max) * 1000) / 10}%.`);
+        } else {
+          jarvisRespond(`Got ${score} out of ${max} — which subject was that for?`);
+          jarvisSetStatus("Tap the mic and speak.");
+          return;
+        }
+      }
+      jarvisSetStatus("Tap the mic and speak.");
+      return;
+    }
+  }
+
+  // quest completion
+  if (/\b(complete|check off|mark|finish|done with)\b/.test(lower)) {
+    const quest = jarvisFindQuest(lower);
+    if (quest) {
+      const already = !!state.todayQuests[quest.id];
+      toggleQuest(quest.id, quest);
+      jarvisRespond(already ? `Unmarked "${quest.label}".` : `Marked "${quest.label}" done. +${quest.xp} XP.`);
+      jarvisSetStatus("Tap the mic and speak.");
+      return;
+    }
+  }
+
+  // stats
+  if (/\b(how am i doing|status report|my stats|streak|how's my progress)\b/.test(lower)) {
+    jarvisRespond(jarvisStatsSummary());
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+
+  // memory: remember
+  const rememberMatch = text.match(/^remember (?:that )?(.+)/i);
+  if (rememberMatch) {
+    const fact = rememberMatch[1].trim();
+    jarvisNotes.push(fact);
+    jarvisSaveNotes();
+    renderJarvisNotes();
+    jarvisRespond(`Noted — I'll remember that ${fact}.`);
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+
+  // memory: recall
+  if (/\bwhat do you remember\b|\bwhat have i told you\b|\bmy notes\b/.test(lower)) {
+    jarvisRespond(jarvisNotes.length ? `Here's what you've told me: ${jarvisNotes.join("; ")}.` : "You haven't told me anything to remember yet.");
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+
+  // memory: forget
+  if (/\bforget everything\b|\bclear (your )?memory\b/.test(lower)) {
+    jarvisForgetAll();
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+
+  // fallback to AI (only works once the Cloudflare Worker AI Coach is configured)
+  const endpoint = getAIEndpoint();
+  if (!endpoint) {
+    jarvisRespond(`I didn't catch a command I know yet. Say "what can you do" for examples — or set up the AI Coach in the Planner tab so I can understand anything you say.`);
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+
+  const system =
+    "You are JARVIS, a voice assistant embedded in an SSB/AFCAT/CDS prep tracker web app. " +
+    "Convert the user's spoken command into exactly ONE JSON object, nothing else, no markdown. Valid shapes:\n" +
+    '{"action":"switch_tab","tab":"system|year|planner|mock"}\n' +
+    '{"action":"timer","command":"start|pause|reset"}\n' +
+    '{"action":"theme","name":"blue|crimson|emerald|violet|mono"}\n' +
+    '{"action":"complete_quest","query":"<text describing the quest>"}\n' +
+    '{"action":"log_mock","type":"sectional|full","subject":"<subject label or null>","score":<number>,"max":<number>}\n' +
+    '{"action":"remember","fact":"<text to remember>"}\n' +
+    '{"action":"recall_memory"}\n' +
+    '{"action":"stats"}\n' +
+    '{"action":"reply","text":"<a short spoken reply — for anything conversational, a question, or that matches no other action>"}\n' +
+    "Pick the single best-fitting action.";
+
+  const notesContext = jarvisNotes.length ? `Things the user has told you to remember: ${jarvisNotes.join("; ")}.` : "";
+  const recentTurns = jarvisLogEntries.slice(-8).map(e => `${e.role}: ${e.text}`).join("\n");
+  const prompt = `${notesContext}\nRecent conversation:\n${recentTurns}\n\nNew command: "${text}"`;
+
+  const result = await callAI(system, prompt);
+  if (result.error) {
+    jarvisRespond(`I couldn't reach the AI to interpret that: ${result.error}`);
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+
+  let action;
+  try {
+    let cleaned = result.text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/```\s*$/, "");
+    action = JSON.parse(cleaned);
+  } catch (e) {
+    jarvisRespond("I heard you, but couldn't work out what to do with that.");
+    jarvisSetStatus("Tap the mic and speak.");
+    return;
+  }
+
+  jarvisExecuteAction(action);
+  jarvisSetStatus("Tap the mic and speak.");
+}
+
+function jarvisExecuteAction(action) {
+  if (!action || !action.action) {
+    jarvisRespond("I heard you, but couldn't work out what to do with that.");
+    return;
+  }
+  switch (action.action) {
+    case "switch_tab": {
+      const tabNames = { system: "System", year: "Year Tracker", planner: "Planner", mock: "Mocks" };
+      if (tabNames[action.tab]) {
+        switchTab(action.tab);
+        jarvisRespond(`Opening ${tabNames[action.tab]}.`);
+      } else {
+        jarvisRespond("Not sure which tab you meant.");
+      }
+      break;
+    }
+    case "timer": {
+      if (action.command === "start") { if (!timerRunning) timerToggle(); jarvisRespond("Timer started."); }
+      else if (action.command === "pause") { if (timerRunning) timerToggle(); jarvisRespond("Timer paused."); }
+      else if (action.command === "reset") { timerReset(); jarvisRespond("Timer reset."); }
+      else jarvisRespond("Didn't catch what to do with the timer.");
+      break;
+    }
+    case "theme": {
+      const t = THEMES.find(th => th.id === action.name);
+      if (t) { applyTheme(t.id); jarvisRespond(`Theme set to ${t.label}.`); }
+      else jarvisRespond("Didn't recognize that theme.");
+      break;
+    }
+    case "complete_quest": {
+      const quest = jarvisFindQuest(action.query || "");
+      if (quest) {
+        const already = !!state.todayQuests[quest.id];
+        toggleQuest(quest.id, quest);
+        jarvisRespond(already ? `Unmarked "${quest.label}".` : `Marked "${quest.label}" done. +${quest.xp} XP.`);
+      } else {
+        jarvisRespond("Couldn't find a matching quest for today.");
+      }
+      break;
+    }
+    case "log_mock": {
+      const score = Number(action.score), max = Number(action.max);
+      if (!score && score !== 0 || !max) { jarvisRespond("I need a valid score and max marks to log that."); break; }
+      if (action.type === "full") {
+        jarvisLogMockScore("full", null, score, max);
+        jarvisRespond(`Logged: Full Mock, ${score} out of ${max}.`);
+      } else {
+        const subj = action.subject && mockSettings.subjects.find(s => s.label.toLowerCase() === String(action.subject).toLowerCase());
+        if (subj) {
+          jarvisLogMockScore("sectional", subj.label, score, max);
+          jarvisRespond(`Logged: ${subj.label} sectional, ${score} out of ${max}.`);
+        } else {
+          jarvisRespond(`Got ${score} out of ${max} — which subject was that for?`);
+        }
+      }
+      break;
+    }
+    case "remember": {
+      if (action.fact) {
+        jarvisNotes.push(action.fact);
+        jarvisSaveNotes();
+        renderJarvisNotes();
+        jarvisRespond(`Noted — I'll remember that ${action.fact}.`);
+      }
+      break;
+    }
+    case "recall_memory": {
+      jarvisRespond(jarvisNotes.length ? `Here's what you've told me: ${jarvisNotes.join("; ")}.` : "You haven't told me anything to remember yet.");
+      break;
+    }
+    case "stats": {
+      jarvisRespond(jarvisStatsSummary());
+      break;
+    }
+    case "reply": {
+      jarvisRespond(action.text || "Okay.");
+      break;
+    }
+    default:
+      jarvisRespond("I heard you, but couldn't work out what to do with that.");
+  }
 }
 
 /* ---------- init planner tab ---------- */
