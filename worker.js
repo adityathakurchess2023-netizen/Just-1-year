@@ -1,8 +1,7 @@
-const ALLOWED_ORIGIN = "*"; // tighten to your github.io URL once it's working
+const ALLOWED_ORIGIN = "*";
 
 export default {
   async fetch(request, env) {
-    // Handle CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders() });
     }
@@ -28,7 +27,6 @@ export default {
       return json({ error: "Server misconfigured: GEMINI_API_KEY secret is not set." }, 500);
     }
 
-    // Translate the Claude-style messages into Gemini format
     const contents = messages.map(m => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }]
@@ -49,7 +47,7 @@ export default {
     
     try {
       const upstream = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
         {
           method: "POST",
           headers: {
@@ -67,12 +65,11 @@ export default {
 
       const candidate = data.candidates?.[0];
       if (!candidate || !candidate.content) {
-        return json({ error: "Gemini API returned no content. (Check safety settings or response)." }, 500);
+        return json({ error: "Gemini API returned no content." }, 500);
       }
 
       const outputText = candidate.content.parts?.[0]?.text || "";
 
-      // Translate back to the Claude-style response that index.html expects
       const responseBody = {
         content: [
           { type: "text", text: outputText }
