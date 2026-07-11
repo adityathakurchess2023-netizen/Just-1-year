@@ -226,6 +226,48 @@
     font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:0.05em; cursor:pointer; margin: 0 4px;
   }
   .modal button.secondary { background:#22314a; }
+
+  .coach-tab-btn {
+    background:#0d1a2e; border:1px solid #2a4a7a; color:#7c93b8;
+    font-family:'Orbitron',sans-serif; font-size:9.5px; letter-spacing:0.03em;
+    padding:7px 8px; border-radius:14px; cursor:pointer; flex:1; text-align:center;
+    transition: all 0.15s ease;
+  }
+  .coach-tab-btn.active {
+    background:linear-gradient(180deg, rgba(59,130,246,0.25), rgba(59,130,246,0.08));
+    color:#eaf4ff; border-color: var(--accent,#3b82f6);
+  }
+  .ai-block {
+    background:#0c1626; border:1px solid #1e3552; border-radius:6px;
+    padding:9px 10px; margin-bottom:6px; display:flex; gap:8px; align-items:flex-start;
+  }
+  .ai-block input[type="checkbox"] { margin-top:3px; width:15px; height:15px; accent-color:#3b82f6; cursor:pointer; flex-shrink:0; }
+  .ai-block-body { flex:1; min-width:0; }
+  .ai-block-time { font-family:'Orbitron',sans-serif; font-size:10px; color:#7fc3ff; margin-bottom:2px; }
+  .ai-block-text { font-size:13px; color:#dbe9ff; line-height:1.4; outline:none; }
+  .ai-block-text.done { color:#5c7699; text-decoration:line-through; }
+  .ai-block-del { background:none; border:none; color:#5c7699; cursor:pointer; font-size:15px; flex-shrink:0; padding:0 2px; }
+  .ai-loading { font-size:11px; color:#7fc3ff; text-align:center; padding:14px 0; }
+  .ai-loading::before { content:"⏳ "; }
+  .ai-btn {
+    background:#3b82f6; border:none; color:#fff; border-radius:6px; padding:9px;
+    font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:0.05em; cursor:pointer;
+  }
+  .ai-btn.secondary { background:#22314a; color:#cfe3ff; }
+  .ai-btn:disabled { opacity:0.5; cursor:default; }
+  .ai-error {
+    font-size:11.5px; color:#ff9d8a; background:rgba(224,72,63,0.08);
+    border-left:3px solid #e0483f; padding:8px 10px; border-radius:4px; line-height:1.5;
+  }
+  .ai-chip {
+    background:#152238; border:1px solid #2a4a7a; color:#cfe3ff;
+    border-radius:14px; padding:6px 11px; font-size:11px; cursor:pointer;
+  }
+  .ai-chip.selected { background:linear-gradient(180deg, rgba(59,130,246,0.3), rgba(59,130,246,0.12)); border-color:#3b82f6; color:#eaf4ff; }
+  .ai-select {
+    background:#0d1a2e; border:1px solid #2a4a7a; color:#eaf4ff; border-radius:6px;
+    padding:7px; font-size:12px; font-family:'Rajdhani',sans-serif;
+  }
 </style>
 </head>
 <body>
@@ -346,6 +388,74 @@
   </div>
   <div style="display:flex;gap:4px;margin-bottom:10px;" id="weekDayStrip"></div>
   <div class="insight" id="weeklySummaryText"></div>
+</div>
+
+<div class="panel" id="aiCoachPanel">
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div class="section-title" style="margin:0;">🤖 AI Coach</div>
+    <button onclick="toggleAISetup()" style="background:none;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;">⚙ Connection</button>
+  </div>
+
+  <div id="aiSetupRow" style="display:none; margin-top:10px; background:#0d1a2e; border:1px solid #2a4a7a; border-radius:6px; padding:10px;">
+    <div style="font-size:10.5px;color:#9db6da;line-height:1.5;margin-bottom:8px;">
+      Paste the URL of your AI proxy (a small backend that holds your Claude API key). See the setup guide included with this download if you haven't made one yet.
+    </div>
+    <div style="display:flex;gap:6px;">
+      <input id="aiEndpointInput" placeholder="https://your-worker.workers.dev" style="flex:1;padding:7px;background:#0a1220;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;font-size:12px;" />
+      <button onclick="saveAIEndpoint()" class="ai-btn">Save</button>
+    </div>
+    <div id="aiSetupStatus" style="font-size:10px;color:#5c7699;margin-top:6px;"></div>
+  </div>
+
+  <div style="display:flex;gap:6px;margin:12px 0;flex-wrap:wrap;">
+    <button class="coach-tab-btn active" id="coachTabBtn-plan" onclick="switchCoachTab('plan')">Study Plan</button>
+    <button class="coach-tab-btn" id="coachTabBtn-journal" onclick="switchCoachTab('journal')">Feedback</button>
+    <button class="coach-tab-btn" id="coachTabBtn-diet" onclick="switchCoachTab('diet')">Diet</button>
+  </div>
+
+  <!-- STUDY PLAN PANE -->
+  <div id="coachPane-plan">
+    <p style="font-size:10px;color:#5c7699;margin:-4px 0 8px;">A 12-hour study schedule for today, built around your current phase and weak stats — gym, meditation, and sleep aren't included since those are already tracked above.</p>
+    <textarea id="planNotesInput" rows="2" placeholder="Anything specific for today? (e.g. 'weak in comprehension', 'half day only, 6 hrs')" style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:8px;font-family:'Rajdhani',sans-serif;font-size:12.5px;resize:vertical;margin-bottom:8px;"></textarea>
+    <button class="ai-btn" id="genPlanBtn" style="width:100%;" onclick="generateStudyPlan()">Generate Today's Plan</button>
+    <div id="planStatus" style="margin-top:10px;"></div>
+    <div id="planBlocks" style="margin-top:8px;"></div>
+    <div id="planAddRow" style="display:none; gap:6px; margin-top:6px;">
+      <input id="newBlockTime" placeholder="e.g. 14:00–15:30" style="flex:1;padding:7px;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;font-size:12px;" />
+      <input id="newBlockText" placeholder="Task" style="flex:2;padding:7px;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;font-size:12px;" />
+      <button onclick="addPlanBlock()" class="ai-btn" style="padding:0 12px;">Add</button>
+    </div>
+  </div>
+
+  <!-- JOURNAL / LECTURETTE FEEDBACK PANE -->
+  <div id="coachPane-journal" style="display:none;">
+    <p style="font-size:10px;color:#5c7699;margin:-4px 0 8px;">Paste a lecturette script, OLQ reflection, or your weekly reflection above — get direct feedback on structure, clarity, and the OLQs it signals.</p>
+    <textarea id="feedbackInput" rows="5" placeholder="Paste your entry here..." style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:8px;font-family:'Rajdhani',sans-serif;font-size:12.5px;resize:vertical;margin-bottom:8px;"></textarea>
+    <button class="ai-btn" id="getFeedbackBtn" style="width:100%;" onclick="getJournalFeedback()">Get Feedback</button>
+    <div id="feedbackStatus" style="margin-top:10px;"></div>
+    <div id="feedbackOutput" style="margin-top:8px;"></div>
+  </div>
+
+  <!-- DIET PANE -->
+  <div id="coachPane-diet" style="display:none;">
+    <p style="font-size:10px;color:#5c7699;margin:-4px 0 8px;">General nutrition guidance for muscle recovery and focus, built around your training day. This is general wellness info, not personalized medical or dietetic advice.</p>
+    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+      <select id="dietPrefSelect" class="ai-select" style="flex:1;min-width:140px;">
+        <option value="vegetarian">Vegetarian</option>
+        <option value="eggetarian">Eggetarian</option>
+        <option value="non-vegetarian">Non-vegetarian</option>
+        <option value="vegan">Vegan</option>
+      </select>
+      <select id="dietBudgetSelect" class="ai-select" style="flex:1;min-width:140px;">
+        <option value="hostel/mess food">Hostel / mess food</option>
+        <option value="home-cooked">Home-cooked</option>
+        <option value="simple budget-friendly">Budget-friendly / simple</option>
+      </select>
+    </div>
+    <button class="ai-btn" id="genDietBtn" style="width:100%;" onclick="generateDietPlan()">Generate Today's Diet Plan</button>
+    <div id="dietStatus" style="margin-top:10px;"></div>
+    <div id="dietOutput" style="margin-top:8px;"></div>
+  </div>
 </div>
 
 <div class="panel">
@@ -1569,6 +1679,288 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker.register("service-worker.js").catch(() => {});
   });
 }
+
+/* ===================== AI COACH ===================== */
+/*
+  This talks to a small backend YOU control (a "proxy worker") that holds your
+  Claude API key server-side and forwards requests to Anthropic. It never talks
+  to api.anthropic.com directly from this page, because a key can't safely live
+  in public front-end code. See AI_COACH_SETUP.md for how to deploy the proxy
+  (free, takes about 5 minutes on Cloudflare Workers).
+*/
+
+const AI_ENDPOINT_KEY = "solo-leveling-ai-endpoint";
+const AI_CACHE_KEY = "solo-leveling-ai-cache";
+
+function getAIEndpoint() {
+  return (localStorage.getItem(AI_ENDPOINT_KEY) || "").trim();
+}
+
+function loadAICache() {
+  try {
+    const raw = localStorage.getItem(AI_CACHE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+function saveAICache(cache) {
+  try { localStorage.setItem(AI_CACHE_KEY, JSON.stringify(cache)); } catch (e) {}
+}
+let aiCache = loadAICache();
+
+function toggleAISetup() {
+  const row = document.getElementById("aiSetupRow");
+  const isHidden = row.style.display === "none" || !row.style.display;
+  row.style.display = isHidden ? "block" : "none";
+  if (isHidden) {
+    document.getElementById("aiEndpointInput").value = getAIEndpoint();
+  }
+}
+
+function saveAIEndpoint() {
+  const val = document.getElementById("aiEndpointInput").value.trim();
+  localStorage.setItem(AI_ENDPOINT_KEY, val);
+  const status = document.getElementById("aiSetupStatus");
+  status.textContent = val ? "Saved. You're connected." : "Cleared — AI Coach is now disconnected.";
+  status.style.color = val ? "#8be6a8" : "#5c7699";
+}
+
+function switchCoachTab(tab) {
+  ["plan", "journal", "diet"].forEach(t => {
+    document.getElementById("coachPane-" + t).style.display = t === tab ? "block" : "none";
+    document.getElementById("coachTabBtn-" + t).classList.toggle("active", t === tab);
+  });
+}
+
+/* Generic call to your proxy worker. The worker forwards {system, messages} to
+   Anthropic's /v1/messages endpoint using its own securely-stored API key. */
+async function callAI(systemPrompt, userPrompt, maxTokens) {
+  const endpoint = getAIEndpoint();
+  if (!endpoint) {
+    const err = new Error("NO_ENDPOINT");
+    err.code = "NO_ENDPOINT";
+    throw err;
+  }
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: maxTokens || 1200,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userPrompt }],
+    }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error("Request failed (" + res.status + "). " + text.slice(0, 200));
+  }
+  const data = await res.json();
+  const block = (data.content || []).find(b => b.type === "text");
+  if (!block) throw new Error("The AI didn't return any text — check your worker logs.");
+  return block.text;
+}
+
+function aiErrorMessage(err) {
+  if (err && err.code === "NO_ENDPOINT") {
+    return "No AI connection set up yet. Tap ⚙ Connection above, paste your proxy URL, and save. See AI_COACH_SETUP.md for how to create one.";
+  }
+  return "Couldn't reach the AI right now — " + (err && err.message ? err.message : "unknown error") + ". Check your connection and that your proxy worker is deployed and awake.";
+}
+
+function stripCodeFence(text) {
+  return text.trim().replace(/^```(json)?/i, "").replace(/```$/, "").trim();
+}
+
+/* ---------- Study Plan ---------- */
+
+function getPlanState(dateStr) {
+  return (aiCache.plans && aiCache.plans[dateStr]) || null;
+}
+function savePlanState(dateStr, blocks) {
+  aiCache.plans = aiCache.plans || {};
+  aiCache.plans[dateStr] = blocks;
+  saveAICache(aiCache);
+}
+
+async function generateStudyPlan() {
+  const btn = document.getElementById("genPlanBtn");
+  const statusEl = document.getElementById("planStatus");
+  const notes = document.getElementById("planNotesInput").value.trim();
+  const now = new Date();
+  const phase = getPhase(now);
+  const info = getPhaseInfo(phase, now);
+  const weakStat = Object.entries(state.stats).reduce((a, b) => (b[1] < a[1] ? b : a))[0];
+
+  const phaseFocus = {
+    1: "AFCAT written exam: English, Reasoning, General Awareness, Quant, plus basic Maths.",
+    2: "AFSB interview stage: Lecturette practice, PPDT/TAT storytelling, GTO task rehearsal, OLQ reflection, mock interview Q&A.",
+    3: "CDS written exam: English, General Knowledge/Current Affairs, Elementary Mathematics.",
+    4: "Post-exam build phase: Python programming practice and finance/markets learning + content building.",
+  }[phase];
+
+  const system = `You are a disciplined, encouraging study coach for a candidate preparing for Indian Armed Forces entry exams (AFCAT/AFSB/CDS) and later Python + finance skill-building. You build realistic daily study schedules. Respond with ONLY a JSON array, no prose, no markdown fences, no explanation. Each item: {"time": "HH:MM–HH:MM", "task": "short specific task"}. Blocks should sum to about 12 hours of STUDY time only — do NOT include gym, workout, running, meditation, meals, or sleep, those are tracked separately. Include short 5-10 minute breaks as their own array items labeled as breaks so the person can see them, but don't count breaks toward the 12 hours. Be specific to the current focus area, not generic ("revise topic" is too vague — name an actual sub-topic or activity).`;
+
+  const user = `Current phase: ${info.name}. Focus for this phase: ${phaseFocus}${info.daysLeft !== undefined ? ` (${info.daysLeft} days left until ${info.label})` : ""}.
+Weakest current stat: ${STAT_NAMES[weakStat]} — bias some blocks toward this if it fits the phase focus.
+${notes ? "Notes from the person for today: " + notes : "No special notes for today — plan a full standard day."}
+Build today's 12-hour study schedule now.`;
+
+  btn.disabled = true;
+  statusEl.innerHTML = `<div class="ai-loading">Building today's schedule...</div>`;
+  document.getElementById("planBlocks").innerHTML = "";
+
+  try {
+    const raw = await callAI(system, user, 1500);
+    const cleaned = stripCodeFence(raw);
+    let blocks = JSON.parse(cleaned);
+    if (!Array.isArray(blocks)) throw new Error("Unexpected response format.");
+    blocks = blocks.map((b, i) => ({
+      id: "b" + Date.now() + "_" + i,
+      time: b.time || "",
+      task: b.task || "",
+      done: false,
+    }));
+    savePlanState(todayStr(now), blocks);
+    statusEl.innerHTML = "";
+    renderPlanBlocks();
+  } catch (err) {
+    statusEl.innerHTML = `<div class="ai-error">${aiErrorMessage(err)}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderPlanBlocks() {
+  const now = new Date();
+  const dateStr = todayStr(now);
+  const blocks = getPlanState(dateStr) || [];
+  const container = document.getElementById("planBlocks");
+  const addRow = document.getElementById("planAddRow");
+  container.innerHTML = "";
+
+  if (!blocks.length) {
+    addRow.style.display = "none";
+    return;
+  }
+  addRow.style.display = "flex";
+
+  blocks.forEach(b => {
+    const row = document.createElement("div");
+    row.className = "ai-block";
+    row.innerHTML = `
+      <input type="checkbox" ${b.done ? "checked" : ""} data-id="${b.id}" />
+      <div class="ai-block-body">
+        <div class="ai-block-time">${b.time}</div>
+        <div class="ai-block-text ${b.done ? "done" : ""}" contenteditable="true" data-id="${b.id}">${b.task}</div>
+      </div>
+      <button class="ai-block-del" data-id="${b.id}" title="Remove">×</button>
+    `;
+    row.querySelector('input[type="checkbox"]').addEventListener("change", (e) => {
+      togglePlanBlockDone(b.id, e.target.checked);
+    });
+    row.querySelector(".ai-block-text").addEventListener("blur", (e) => {
+      editPlanBlockText(b.id, e.target.textContent);
+    });
+    row.querySelector(".ai-block-del").addEventListener("click", () => {
+      deletePlanBlock(b.id);
+    });
+    container.appendChild(row);
+  });
+}
+
+function togglePlanBlockDone(id, done) {
+  const dateStr = todayStr(new Date());
+  const blocks = getPlanState(dateStr) || [];
+  const b = blocks.find(x => x.id === id);
+  if (b) { b.done = done; savePlanState(dateStr, blocks); renderPlanBlocks(); }
+}
+function editPlanBlockText(id, text) {
+  const dateStr = todayStr(new Date());
+  const blocks = getPlanState(dateStr) || [];
+  const b = blocks.find(x => x.id === id);
+  if (b) { b.task = text.trim(); savePlanState(dateStr, blocks); }
+}
+function deletePlanBlock(id) {
+  const dateStr = todayStr(new Date());
+  let blocks = getPlanState(dateStr) || [];
+  blocks = blocks.filter(x => x.id !== id);
+  savePlanState(dateStr, blocks);
+  renderPlanBlocks();
+}
+function addPlanBlock() {
+  const timeInput = document.getElementById("newBlockTime");
+  const textInput = document.getElementById("newBlockText");
+  const time = timeInput.value.trim();
+  const task = textInput.value.trim();
+  if (!task) return;
+  const dateStr = todayStr(new Date());
+  const blocks = getPlanState(dateStr) || [];
+  blocks.push({ id: "b" + Date.now(), time: time || "—", task, done: false });
+  savePlanState(dateStr, blocks);
+  timeInput.value = "";
+  textInput.value = "";
+  renderPlanBlocks();
+}
+
+/* ---------- Journal / Lecturette Feedback ---------- */
+
+async function getJournalFeedback() {
+  const btn = document.getElementById("getFeedbackBtn");
+  const statusEl = document.getElementById("feedbackStatus");
+  const outputEl = document.getElementById("feedbackOutput");
+  const text = document.getElementById("feedbackInput").value.trim();
+  if (!text) {
+    statusEl.innerHTML = `<div class="ai-error">Paste something first — a lecturette script, OLQ reflection, or your weekly reflection.</div>`;
+    return;
+  }
+
+  const system = `You are an SSB (Services Selection Board) preparation mentor reviewing a candidate's written or spoken practice material — could be a Lecturette script, an OLQ (Officer-Like Qualities) reflection, or a weekly self-reflection. Give direct, specific, constructive feedback in plain prose (no markdown headers, a few short paragraphs). Cover: structure and clarity, what OLQs it demonstrates or fails to demonstrate (e.g. initiative, reasoning ability, social adaptability, determination), and one concrete thing to improve. Be honest but encouraging — this is a person actively training, not a finished product.`;
+  const user = `Here is the entry:\n\n${text}`;
+
+  btn.disabled = true;
+  statusEl.innerHTML = `<div class="ai-loading">Reading it over...</div>`;
+  outputEl.innerHTML = "";
+
+  try {
+    const response = await callAI(system, user, 900);
+    outputEl.innerHTML = `<div class="insight">${response.replace(/\n/g, "<br/>")}</div>`;
+    statusEl.innerHTML = "";
+  } catch (err) {
+    statusEl.innerHTML = `<div class="ai-error">${aiErrorMessage(err)}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* ---------- Diet Plan ---------- */
+
+async function generateDietPlan() {
+  const btn = document.getElementById("genDietBtn");
+  const statusEl = document.getElementById("dietStatus");
+  const outputEl = document.getElementById("dietOutput");
+  const pref = document.getElementById("dietPrefSelect").value;
+  const access = document.getElementById("dietBudgetSelect").value;
+
+  const system = `You are a general wellness assistant giving food-group-level nutrition guidance to a physically active student training for a demanding fitness and academic routine (strength training, running, and long study hours). Give general, practical guidance only — food groups, meal timing around workouts, hydration, and simple examples. Do NOT give exact calorie counts, macro gram targets, or supplement dosing — you don't know this person's body weight, medical history, or goals in that detail. Structure the day as: on waking, post-workout, main meals, evening/study-fuel snacks, and before sleep. Keep it realistic for the food access described. End with one honest line noting this is general guidance, not a personalized medical or dietetic plan.`;
+  const user = `Dietary preference: ${pref}. Food access: ${access}. Today involves strength training, a run, and roughly 12 hours of study. Give today's general meal structure.`;
+
+  btn.disabled = true;
+  statusEl.innerHTML = `<div class="ai-loading">Putting today's meals together...</div>`;
+  outputEl.innerHTML = "";
+
+  try {
+    const response = await callAI(system, user, 900);
+    outputEl.innerHTML = `<div class="insight">${response.replace(/\n/g, "<br/>")}</div>`;
+    statusEl.innerHTML = "";
+  } catch (err) {
+    statusEl.innerHTML = `<div class="ai-error">${aiErrorMessage(err)}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* Render whatever plan already exists for today on load */
+renderPlanBlocks();
 </script>
 
 </body>
