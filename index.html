@@ -544,7 +544,7 @@
       <div style="font-size:11px;color:#7fc3ff;" id="plannerTotalTime"></div>
     </div>
 
-    <input type="text" id="aiPlanInstructions" placeholder="Tell the AI anything specific — 'weak in comprehension', 'only 6 hrs today', 'swap out GTO for more mocks'..." style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:8px;font-size:12px;margin-bottom:10px;box-sizing:border-box;" />
+    <textarea id="aiPlanInstructions" placeholder="Tell the AI anything specific — subject order, a study/break ratio like 90/10, only 6 hrs today, swap out GTO for more mocks, whatever you want it to follow exactly..." rows="2" style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:8px;font-size:12px;margin-bottom:10px;box-sizing:border-box;font-family:inherit;resize:vertical;"></textarea>
 
     <div class="xp-bar-bg" style="margin-bottom:12px;"><div class="xp-bar-fill" id="plannerProgressFill" style="width:0%;"></div></div>
 
@@ -1828,15 +1828,16 @@ async function aiBuildSchedule(targetId) {
   noteEl.textContent = "Thinking…";
 
   const system =
-    "You design realistic 15-hour daily study schedules for SSB (Indian defence services) aspirants. " +
-    "Exclude gym, meditation, meals, and sleep — study only. " +
+    "You design daily study schedules for SSB (Indian defence services) aspirants. " +
+    "The user's specific instructions ALWAYS take priority over any default — if they specify subject order, block lengths, a study/break ratio (like 90/10), a specific structure, or a shorter/longer day, follow that exactly rather than falling back to a generic template. " +
+    "Exclude gym, meditation, meals, and sleep unless the user explicitly asks to include them. " +
+    "If no specific instructions are given, default to a well-rounded ~15 hour (900 minute) day across SSB-relevant subjects. " +
     'Respond with ONLY a valid JSON array, no markdown formatting, no code fences, no explanation before or after. ' +
-    'Each item must look like {"label": "short task name", "minutes": integer}. ' +
-    "Minutes should be multiples of 5, each block between 20 and 120 minutes. " +
-    "Total should be close to 900 minutes (15 hours) unless the instructions ask for a shorter day.";
+    'Each item must look like {"label": "short task name", "minutes": integer}, minutes as a multiple of 5. ' +
+    "Number of blocks, block length, and total duration are entirely up to what best fits the user's instructions.";
   const prompt =
     `${buildContextSummary()}\n\nBuild today's study schedule starting at ${startTime}.` +
-    (instructions ? ` Additional instructions: ${instructions}` : "");
+    (instructions ? ` The user's instructions below are the priority — follow them precisely: ${instructions}` : "");
 
   const result = await callAI(system, prompt);
 
