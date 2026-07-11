@@ -202,6 +202,35 @@
     padding: 10px 12px; border-radius: 4px;
   }
 
+  .ai-response-box {
+    margin-top: 10px;
+    font-size: 13.5px;
+    color: #cfe3ff;
+    line-height: 1.85;
+    min-height: 20px;
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 12px 14px;
+    background: #0a1220;
+    border: 1px solid #182640;
+    border-radius: 8px;
+    scrollbar-width: auto;
+    scrollbar-color: #3b82f6 #0d1a2e;
+  }
+  .ai-response-box::-webkit-scrollbar { width: 10px; }
+  .ai-response-box::-webkit-scrollbar-track { background: #0d1a2e; border-radius: 8px; }
+  .ai-response-box::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 8px; }
+  .ai-response-box::-webkit-scrollbar-thumb:hover { background: #7fc3ff; }
+  .ai-response-box h3, .ai-response-box h4 {
+    color: #7fc3ff; font-family: 'Orbitron', sans-serif; font-size: 12px;
+    letter-spacing: 0.04em; margin: 14px 0 6px; text-transform: uppercase;
+  }
+  .ai-response-box h3:first-child, .ai-response-box h4:first-child { margin-top: 0; }
+  .ai-response-box p { margin: 0 0 10px; }
+  .ai-response-box ul { margin: 4px 0 10px; padding-left: 18px; }
+  .ai-response-box li { margin-bottom: 4px; }
+  .ai-response-box strong { color: #eaf4ff; }
+
   .reset-link {
     text-align:center; font-size:10px; color:#5c7699; margin-top:10px; cursor:pointer; text-decoration:underline;
     background:none; border:none; font-family:inherit; padding:0;
@@ -486,7 +515,10 @@
       <button onclick="aiChatSend()" style="background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:9px 14px;font-family:'Orbitron',sans-serif;font-size:11px;cursor:pointer;">Ask</button>
     </div>
 
-    <div id="aiResponseBox" style="margin-top:10px;font-size:13px;color:#cfe3ff;line-height:1.6;white-space:pre-wrap;min-height:20px;"></div>
+    <div id="aiResponseBox" class="ai-response-box"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+      <button onclick="copyAIResponse()" id="aiCopyBtn" style="display:none;background:none;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:4px 10px;font-size:10px;cursor:pointer;">📋 Copy</button>
+    </div>
   </div>
 
   <div class="panel">
@@ -2067,11 +2099,68 @@ async function aiQuickAction(type) {
   }
 }
 
+function escapeHTML(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function inlineFormat(text) {
+  return text.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+}
+
+function renderMarkdownLite(raw) {
+  const lines = escapeHTML(raw).split("\n");
+  let html = "";
+  let inList = false;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed === "") {
+      if (inList) { html += "</ul>"; inList = false; }
+      continue;
+    }
+    const headerMatch = trimmed.match(/^#{1,4}\s+(.*)/);
+    if (headerMatch) {
+      if (inList) { html += "</ul>"; inList = false; }
+      html += `<h4>${inlineFormat(headerMatch[1])}</h4>`;
+      continue;
+    }
+    const bulletMatch = trimmed.match(/^[-*]\s+(.*)/);
+    if (bulletMatch) {
+      if (!inList) { html += "<ul>"; inList = true; }
+      html += `<li>${inlineFormat(bulletMatch[1])}</li>`;
+      continue;
+    }
+    if (inList) { html += "</ul>"; inList = false; }
+    html += `<p>${inlineFormat(trimmed)}</p>`;
+  }
+  if (inList) html += "</ul>";
+  return html;
+}
+
+let lastAIResponseText = "";
+
 async function runAIRequest(system, prompt) {
   const box = document.getElementById("aiResponseBox");
+  const copyBtn = document.getElementById("aiCopyBtn");
+  copyBtn.style.display = "none";
   box.textContent = "Thinking…";
   const result = await callAI(system, prompt);
-  box.textContent = result.error ? "⚠ " + result.error : result.text;
+  if (result.error) {
+    lastAIResponseText = "";
+    box.textContent = "⚠ " + result.error;
+  } else {
+    lastAIResponseText = result.text;
+    box.innerHTML = renderMarkdownLite(result.text);
+    copyBtn.style.display = "inline-block";
+  }
+}
+
+function copyAIResponse() {
+  const btn = document.getElementById("aiCopyBtn");
+  navigator.clipboard.writeText(lastAIResponseText).then(() => {
+    const original = btn.textContent;
+    btn.textContent = "✓ Copied";
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  }).catch(() => {});
 }
 
 updateAIStatusDot();
