@@ -7,8 +7,8 @@
 <meta name="description" content="SSB prep tracker: quests, XP, study timer, and a one-year study log." />
 <meta name="theme-color" content="#0a1220" />
 <link rel="manifest" href="manifest.json" />
-<link rel="icon" href="icon-192.png" />
-<link rel="apple-touch-icon" href="icon-192.png" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="THE SYSTEM" />
@@ -46,7 +46,7 @@
     --insight-bg: rgba(200,200,200,0.07); --bg1: #14161a; --bg2: #050608;
   }
 
-  #systemView, #yearView {
+  #systemView, #yearView, #plannerView {
     width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: stretch;
   }
 
@@ -226,48 +226,6 @@
     font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:0.05em; cursor:pointer; margin: 0 4px;
   }
   .modal button.secondary { background:#22314a; }
-
-  .coach-tab-btn {
-    background:#0d1a2e; border:1px solid #2a4a7a; color:#7c93b8;
-    font-family:'Orbitron',sans-serif; font-size:9.5px; letter-spacing:0.03em;
-    padding:7px 8px; border-radius:14px; cursor:pointer; flex:1; text-align:center;
-    transition: all 0.15s ease;
-  }
-  .coach-tab-btn.active {
-    background:linear-gradient(180deg, rgba(59,130,246,0.25), rgba(59,130,246,0.08));
-    color:#eaf4ff; border-color: var(--accent,#3b82f6);
-  }
-  .ai-block {
-    background:#0c1626; border:1px solid #1e3552; border-radius:6px;
-    padding:9px 10px; margin-bottom:6px; display:flex; gap:8px; align-items:flex-start;
-  }
-  .ai-block input[type="checkbox"] { margin-top:3px; width:15px; height:15px; accent-color:#3b82f6; cursor:pointer; flex-shrink:0; }
-  .ai-block-body { flex:1; min-width:0; }
-  .ai-block-time { font-family:'Orbitron',sans-serif; font-size:10px; color:#7fc3ff; margin-bottom:2px; }
-  .ai-block-text { font-size:13px; color:#dbe9ff; line-height:1.4; outline:none; }
-  .ai-block-text.done { color:#5c7699; text-decoration:line-through; }
-  .ai-block-del { background:none; border:none; color:#5c7699; cursor:pointer; font-size:15px; flex-shrink:0; padding:0 2px; }
-  .ai-loading { font-size:11px; color:#7fc3ff; text-align:center; padding:14px 0; }
-  .ai-loading::before { content:"⏳ "; }
-  .ai-btn {
-    background:#3b82f6; border:none; color:#fff; border-radius:6px; padding:9px;
-    font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:0.05em; cursor:pointer;
-  }
-  .ai-btn.secondary { background:#22314a; color:#cfe3ff; }
-  .ai-btn:disabled { opacity:0.5; cursor:default; }
-  .ai-error {
-    font-size:11.5px; color:#ff9d8a; background:rgba(224,72,63,0.08);
-    border-left:3px solid #e0483f; padding:8px 10px; border-radius:4px; line-height:1.5;
-  }
-  .ai-chip {
-    background:#152238; border:1px solid #2a4a7a; color:#cfe3ff;
-    border-radius:14px; padding:6px 11px; font-size:11px; cursor:pointer;
-  }
-  .ai-chip.selected { background:linear-gradient(180deg, rgba(59,130,246,0.3), rgba(59,130,246,0.12)); border-color:#3b82f6; color:#eaf4ff; }
-  .ai-select {
-    background:#0d1a2e; border:1px solid #2a4a7a; color:#eaf4ff; border-radius:6px;
-    padding:7px; font-size:12px; font-family:'Rajdhani',sans-serif;
-  }
 </style>
 </head>
 <body>
@@ -282,6 +240,7 @@
 <div class="tab-nav">
   <button class="tab-btn active" id="tabBtnSystem" onclick="switchTab('system')">⚔ SYSTEM</button>
   <button class="tab-btn" id="tabBtnYear" onclick="switchTab('year')">◎ YEAR TRACKER</button>
+  <button class="tab-btn" id="tabBtnPlanner" onclick="switchTab('planner')">🧭 PLANNER</button>
 </div>
 
 <div id="systemView">
@@ -388,74 +347,6 @@
   </div>
   <div style="display:flex;gap:4px;margin-bottom:10px;" id="weekDayStrip"></div>
   <div class="insight" id="weeklySummaryText"></div>
-</div>
-
-<div class="panel" id="aiCoachPanel">
-  <div style="display:flex;align-items:center;justify-content:space-between;">
-    <div class="section-title" style="margin:0;">🤖 AI Coach</div>
-    <button onclick="toggleAISetup()" style="background:none;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;">⚙ Connection</button>
-  </div>
-
-  <div id="aiSetupRow" style="display:none; margin-top:10px; background:#0d1a2e; border:1px solid #2a4a7a; border-radius:6px; padding:10px;">
-    <div style="font-size:10.5px;color:#9db6da;line-height:1.5;margin-bottom:8px;">
-      Paste the URL of your AI proxy (a small backend that holds your Claude API key). See the setup guide included with this download if you haven't made one yet.
-    </div>
-    <div style="display:flex;gap:6px;">
-      <input id="aiEndpointInput" placeholder="https://your-worker.workers.dev" style="flex:1;padding:7px;background:#0a1220;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;font-size:12px;" />
-      <button onclick="saveAIEndpoint()" class="ai-btn">Save</button>
-    </div>
-    <div id="aiSetupStatus" style="font-size:10px;color:#5c7699;margin-top:6px;"></div>
-  </div>
-
-  <div style="display:flex;gap:6px;margin:12px 0;flex-wrap:wrap;">
-    <button class="coach-tab-btn active" id="coachTabBtn-plan" onclick="switchCoachTab('plan')">Study Plan</button>
-    <button class="coach-tab-btn" id="coachTabBtn-journal" onclick="switchCoachTab('journal')">Feedback</button>
-    <button class="coach-tab-btn" id="coachTabBtn-diet" onclick="switchCoachTab('diet')">Diet</button>
-  </div>
-
-  <!-- STUDY PLAN PANE -->
-  <div id="coachPane-plan">
-    <p style="font-size:10px;color:#5c7699;margin:-4px 0 8px;">A 12-hour study schedule for today, built around your current phase and weak stats — gym, meditation, and sleep aren't included since those are already tracked above.</p>
-    <textarea id="planNotesInput" rows="2" placeholder="Anything specific for today? (e.g. 'weak in comprehension', 'half day only, 6 hrs')" style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:8px;font-family:'Rajdhani',sans-serif;font-size:12.5px;resize:vertical;margin-bottom:8px;"></textarea>
-    <button class="ai-btn" id="genPlanBtn" style="width:100%;" onclick="generateStudyPlan()">Generate Today's Plan</button>
-    <div id="planStatus" style="margin-top:10px;"></div>
-    <div id="planBlocks" style="margin-top:8px;"></div>
-    <div id="planAddRow" style="display:none; gap:6px; margin-top:6px;">
-      <input id="newBlockTime" placeholder="e.g. 14:00–15:30" style="flex:1;padding:7px;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;font-size:12px;" />
-      <input id="newBlockText" placeholder="Task" style="flex:2;padding:7px;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;font-size:12px;" />
-      <button onclick="addPlanBlock()" class="ai-btn" style="padding:0 12px;">Add</button>
-    </div>
-  </div>
-
-  <!-- JOURNAL / LECTURETTE FEEDBACK PANE -->
-  <div id="coachPane-journal" style="display:none;">
-    <p style="font-size:10px;color:#5c7699;margin:-4px 0 8px;">Paste a lecturette script, OLQ reflection, or your weekly reflection above — get direct feedback on structure, clarity, and the OLQs it signals.</p>
-    <textarea id="feedbackInput" rows="5" placeholder="Paste your entry here..." style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:8px;font-family:'Rajdhani',sans-serif;font-size:12.5px;resize:vertical;margin-bottom:8px;"></textarea>
-    <button class="ai-btn" id="getFeedbackBtn" style="width:100%;" onclick="getJournalFeedback()">Get Feedback</button>
-    <div id="feedbackStatus" style="margin-top:10px;"></div>
-    <div id="feedbackOutput" style="margin-top:8px;"></div>
-  </div>
-
-  <!-- DIET PANE -->
-  <div id="coachPane-diet" style="display:none;">
-    <p style="font-size:10px;color:#5c7699;margin:-4px 0 8px;">General nutrition guidance for muscle recovery and focus, built around your training day. This is general wellness info, not personalized medical or dietetic advice.</p>
-    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-      <select id="dietPrefSelect" class="ai-select" style="flex:1;min-width:140px;">
-        <option value="vegetarian">Vegetarian</option>
-        <option value="eggetarian">Eggetarian</option>
-        <option value="non-vegetarian">Non-vegetarian</option>
-        <option value="vegan">Vegan</option>
-      </select>
-      <select id="dietBudgetSelect" class="ai-select" style="flex:1;min-width:140px;">
-        <option value="hostel/mess food">Hostel / mess food</option>
-        <option value="home-cooked">Home-cooked</option>
-        <option value="simple budget-friendly">Budget-friendly / simple</option>
-      </select>
-    </div>
-    <button class="ai-btn" id="genDietBtn" style="width:100%;" onclick="generateDietPlan()">Generate Today's Diet Plan</button>
-    <div id="dietStatus" style="margin-top:10px;"></div>
-    <div id="dietOutput" style="margin-top:8px;"></div>
-  </div>
 </div>
 
 <div class="panel">
@@ -566,6 +457,89 @@
 </div>
 <!-- /yearView -->
 
+<div id="plannerView" style="display:none;width:100%;max-width:560px;">
+
+  <div class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="section-title" style="margin:0;">🤖 AI Coach <span id="aiStatusDot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#7a2a2a;margin-left:6px;"></span></div>
+      <button onclick="toggleAIConfig()" style="background:none;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;">⚙ Configure AI</button>
+    </div>
+
+    <div id="aiConfigRow" style="display:none;margin-top:10px;background:#0d1a2e;border:1px solid #2a4a7a;border-radius:6px;padding:10px;">
+      <div style="font-size:10px;color:#7c93b8;margin-bottom:4px;">Cloudflare Worker URL (from cloudflare-worker.js setup)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="text" id="aiEndpointInput" placeholder="https://your-worker.yourname.workers.dev" style="flex:1;min-width:180px;background:#0a1220;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:7px;font-size:12px;" />
+        <button onclick="saveAIConfig()" style="background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:7px 12px;font-family:'Orbitron',sans-serif;font-size:10px;cursor:pointer;">Save</button>
+      </div>
+      <div style="font-size:10px;color:#5c7699;margin-top:6px;">Not set up yet? See the README for the 10-minute Cloudflare Worker steps — your real API key never touches this app.</div>
+    </div>
+
+    <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+      <button onclick="aiQuickAction('insight')" style="flex:1;min-width:120px;background:#152238;border:1px solid #2a4a7a;color:#cfe3ff;border-radius:6px;padding:8px;font-size:11px;cursor:pointer;">📊 Weekly Insight</button>
+      <button onclick="aiQuickAction('journal')" style="flex:1;min-width:120px;background:#152238;border:1px solid #2a4a7a;color:#cfe3ff;border-radius:6px;padding:8px;font-size:11px;cursor:pointer;">📓 Journal Feedback</button>
+      <button onclick="aiQuickAction('plan')" style="flex:1;min-width:120px;background:#152238;border:1px solid #2a4a7a;color:#cfe3ff;border-radius:6px;padding:8px;font-size:11px;cursor:pointer;">📅 AI-Build Today's Plan</button>
+      <button onclick="aiQuickAction('diet')" style="flex:1;min-width:120px;background:#152238;border:1px solid #2a4a7a;color:#cfe3ff;border-radius:6px;padding:8px;font-size:11px;cursor:pointer;">🍽 AI Diet Plan</button>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <input type="text" id="aiChatInput" placeholder="Ask anything — SSB, current affairs, GTO, lecturette..." style="flex:1;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:9px;font-size:13px;" onkeydown="if(event.key==='Enter') aiChatSend();" />
+      <button onclick="aiChatSend()" style="background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:9px 14px;font-family:'Orbitron',sans-serif;font-size:11px;cursor:pointer;">Ask</button>
+    </div>
+
+    <div id="aiResponseBox" style="margin-top:10px;font-size:13px;color:#cfe3ff;line-height:1.6;white-space:pre-wrap;min-height:20px;"></div>
+  </div>
+
+  <div class="panel">
+    <div class="section-title">🧭 Coach Notes</div>
+    <div class="insight" id="plannerCoachBox"></div>
+  </div>
+
+  <div class="panel">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="section-title" style="margin:0;">12-Hour Daily Program</div>
+      <button onclick="regeneratePlanner()" style="background:#152238;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;">🔄 Regenerate</button>
+    </div>
+    <p style="font-size:10px;color:#5c7699;margin:6px 0 10px;">Auto-built from what you've neglected recently, weighted to your current SSB phase. Gym, meditation, meals, and sleep aren't included here — this is study time only.</p>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <label style="font-size:11px;color:#9db6da;">Start time</label>
+      <input type="time" id="plannerStartTime" value="06:00" onchange="renderPlanner()" style="background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:5px 8px;font-size:12px;" />
+      <div style="flex:1;"></div>
+      <div style="font-size:11px;color:#7fc3ff;" id="plannerTotalTime"></div>
+    </div>
+
+    <div class="xp-bar-bg" style="margin-bottom:12px;"><div class="xp-bar-fill" id="plannerProgressFill" style="width:0%;"></div></div>
+
+    <div id="plannerScheduleList"></div>
+  </div>
+
+  <div class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div class="section-title" style="margin:0;">Add Your Own Task</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+      <input type="text" id="customTaskName" placeholder="Task name" style="flex:2;min-width:140px;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:8px;font-size:13px;" />
+      <input type="number" id="customTaskMinutes" placeholder="Min" min="5" max="240" style="flex:1;min-width:70px;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:8px;font-size:13px;" />
+      <button onclick="addCustomPlannerTask()" style="flex:1;min-width:80px;background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:8px;font-family:'Orbitron',sans-serif;font-size:10px;cursor:pointer;">+ Add</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="section-title" style="margin:0;">Diet — Muscle &amp; Brain Growth</div>
+      <div style="display:flex;gap:6px;">
+        <button id="dietVegBtn" onclick="setDietMode('veg')" style="background:#152238;border:1px solid #2a4a7a;color:#cfe3ff;border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;">Veg</button>
+        <button id="dietNonVegBtn" onclick="setDietMode('nonveg')" style="background:#152238;border:1px solid #2a4a7a;color:#cfe3ff;border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;">Non-Veg</button>
+      </div>
+    </div>
+    <p style="font-size:10px;color:#5c7699;margin:6px 0 10px;">General nutrition guidance for study + physical training days, not a substitute for advice from a doctor or dietitian.</p>
+    <div id="dietPlanList"></div>
+  </div>
+
+</div>
+<!-- /plannerView -->
+
 <div class="modal-bg" id="bossModal">
   <div class="modal">
     <h3>⚔ BOSS BATTLE</h3>
@@ -616,18 +590,29 @@ initThemeSwitcher();
 function switchTab(tab) {
   const sys = document.getElementById("systemView");
   const yr = document.getElementById("yearView");
+  const pl = document.getElementById("plannerView");
   const btnSys = document.getElementById("tabBtnSystem");
   const btnYr = document.getElementById("tabBtnYear");
+  const btnPl = document.getElementById("tabBtnPlanner");
+
+  sys.style.display = "none";
+  yr.style.display = "none";
+  pl.style.display = "none";
+  btnSys.classList.remove("active");
+  btnYr.classList.remove("active");
+  btnPl.classList.remove("active");
+
   if (tab === "year") {
-    sys.style.display = "none";
     yr.style.display = "flex";
-    btnSys.classList.remove("active");
     btnYr.classList.add("active");
     renderYearTracker();
+  } else if (tab === "planner") {
+    pl.style.display = "flex";
+    btnPl.classList.add("active");
+    renderPlanner();
   } else {
+    tab = "system";
     sys.style.display = "flex";
-    yr.style.display = "none";
-    btnYr.classList.remove("active");
     btnSys.classList.add("active");
   }
   localStorage.setItem(TAB_KEY, tab);
@@ -1665,10 +1650,439 @@ function renderYearTracker() {
 
 document.getElementById("yearResetLink").addEventListener("click", resetYearAll);
 
+/* ===================== PLANNER (rule-based, no external AI) ===================== */
+
+const PLANNER_LOG_KEY = "solo-leveling-planner-log";
+const PLANNER_CUSTOM_KEY = "solo-leveling-planner-custom";
+const DIET_MODE_KEY = "solo-leveling-diet-mode";
+
+// Base pool of study task types. `weight` per phase = relative pull toward being picked.
+const TASK_POOL = [
+  { cat: "quant",    label: "Quant / Maths practice set",         minutes: 90,  phaseWeight: { 1: 3, 2: 1, 3: 2, 4: 2 } },
+  { cat: "english",  label: "English — vocab, comprehension, essay", minutes: 60, phaseWeight: { 1: 3, 2: 1, 3: 2, 4: 2 } },
+  { cat: "reasoning",label: "Reasoning / GK practice set",        minutes: 60,  phaseWeight: { 1: 3, 2: 1, 3: 2, 4: 2 } },
+  { cat: "currentaffairs", label: "Current affairs — defence & geopolitics", minutes: 45, phaseWeight: { 1: 2, 2: 3, 3: 3, 4: 3 } },
+  { cat: "lecturette", label: "Lecturette practice (pick a topic, deliver aloud)", minutes: 30, phaseWeight: { 1: 1, 2: 3, 3: 2, 4: 2 } },
+  { cat: "gto",      label: "GTO technique study / group task theory", minutes: 45, phaseWeight: { 1: 1, 2: 3, 3: 2, 4: 2 } },
+  { cat: "interview",label: "Mock self-introduction & PIQ review", minutes: 30, phaseWeight: { 1: 1, 2: 3, 3: 2, 4: 2 } },
+  { cat: "revision", label: "Spaced-repetition revision block",   minutes: 60,  phaseWeight: { 1: 2, 2: 2, 3: 3, 4: 3 } },
+  { cat: "mocktest", label: "Timed mock test section",            minutes: 90,  phaseWeight: { 1: 2, 2: 1, 3: 3, 4: 2 } },
+  { cat: "reading",  label: "Book / long-form reading (focus & comprehension)", minutes: 45, phaseWeight: { 1: 1, 2: 1, 3: 1, 4: 2 } },
+  { cat: "essay",    label: "Essay / written expression practice", minutes: 45, phaseWeight: { 1: 2, 2: 2, 3: 2, 4: 2 } },
+  { cat: "mapwork",  label: "Map work — physical & political geography", minutes: 30, phaseWeight: { 1: 2, 2: 2, 3: 1, 4: 1 } },
+];
+
+function loadPlannerLog() {
+  try { return JSON.parse(localStorage.getItem(PLANNER_LOG_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+function savePlannerLog(log) {
+  try { localStorage.setItem(PLANNER_LOG_KEY, JSON.stringify(log)); } catch (e) {}
+}
+
+function loadPlannerCustomToday() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PLANNER_CUSTOM_KEY)) || {};
+    const today = todayStr(new Date());
+    return raw[today] || [];
+  } catch (e) { return []; }
+}
+function savePlannerCustomToday(list) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PLANNER_CUSTOM_KEY)) || {};
+    raw[todayStr(new Date())] = list;
+    localStorage.setItem(PLANNER_CUSTOM_KEY, JSON.stringify(raw));
+  } catch (e) {}
+}
+
+// Which task categories were done most recently (older = higher pull to be recommended again)
+function categoryRecencyScore(cat, log) {
+  const dates = Object.keys(log).filter(d => (log[d] || []).includes(cat)).sort();
+  if (dates.length === 0) return 10; // never done — high priority
+  const last = new Date(dates[dates.length - 1]);
+  const daysSince = Math.floor((new Date() - last) / 86400000);
+  return Math.min(10, daysSince + 1);
+}
+
+let plannerSchedule = []; // [{id, cat, label, minutes, done, custom}]
+const PLANNER_DONE_KEY = "solo-leveling-planner-done";
+
+function loadPlannerDoneToday() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PLANNER_DONE_KEY)) || {};
+    return raw[todayStr(new Date())] || {};
+  } catch (e) { return {}; }
+}
+function savePlannerDoneToday(doneMap) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PLANNER_DONE_KEY)) || {};
+    raw[todayStr(new Date())] = doneMap;
+    localStorage.setItem(PLANNER_DONE_KEY, JSON.stringify(raw));
+  } catch (e) {}
+}
+
+function generatePlannerTasks() {
+  const now = new Date();
+  const phase = getPhase(now);
+  const log = loadPlannerLog();
+
+  const scored = TASK_POOL.map(t => {
+    const weight = (t.phaseWeight[phase] || 1) * categoryRecencyScore(t.cat, log);
+    return { ...t, score: weight + Math.random() * 3 };
+  }).sort((a, b) => b.score - a.score);
+
+  const TARGET_MINUTES = 720;
+  const picked = [];
+  let total = 0;
+  for (const t of scored) {
+    if (total >= TARGET_MINUTES) break;
+    picked.push({ ...t, id: "p_" + t.cat });
+    total += t.minutes;
+  }
+
+  // Scale to fit exactly 720 minutes so the day is realistic
+  if (total > 0) {
+    const factor = TARGET_MINUTES / total;
+    picked.forEach(t => { t.minutes = Math.max(15, Math.round((t.minutes * factor) / 5) * 5); });
+  }
+
+  return picked;
+}
+
+function buildPlannerSchedule(regenerate) {
+  const customTasks = loadPlannerCustomToday();
+  const doneMap = loadPlannerDoneToday();
+
+  let generated;
+  const cacheKey = "solo-leveling-planner-cache-" + todayStr(new Date());
+  if (!regenerate) {
+    try {
+      const cached = JSON.parse(localStorage.getItem(cacheKey));
+      if (cached) generated = cached;
+    } catch (e) {}
+  }
+  if (!generated) {
+    generated = generatePlannerTasks();
+    try { localStorage.setItem(cacheKey, JSON.stringify(generated)); } catch (e) {}
+  }
+
+  plannerSchedule = [...generated, ...customTasks].map(t => ({
+    ...t,
+    done: !!doneMap[t.id],
+  }));
+}
+
+function regeneratePlanner() {
+  buildPlannerSchedule(true);
+  renderPlanner();
+}
+
+function addCustomPlannerTask() {
+  const nameInput = document.getElementById("customTaskName");
+  const minInput = document.getElementById("customTaskMinutes");
+  const name = nameInput.value.trim();
+  const minutes = parseInt(minInput.value, 10);
+  if (!name || isNaN(minutes) || minutes <= 0) return;
+
+  const custom = loadPlannerCustomToday();
+  const task = { id: "c_" + Date.now(), cat: "custom", label: name, minutes, custom: true };
+  custom.push(task);
+  savePlannerCustomToday(custom);
+
+  nameInput.value = "";
+  minInput.value = "";
+  buildPlannerSchedule(false);
+  renderPlanner();
+}
+
+function removeCustomPlannerTask(id) {
+  const custom = loadPlannerCustomToday().filter(t => t.id !== id);
+  savePlannerCustomToday(custom);
+  buildPlannerSchedule(false);
+  renderPlanner();
+}
+
+function togglePlannerDone(id) {
+  const doneMap = loadPlannerDoneToday();
+  doneMap[id] = !doneMap[id];
+  savePlannerDoneToday(doneMap);
+
+  // log completed category for future recency weighting
+  if (doneMap[id]) {
+    const task = plannerSchedule.find(t => t.id === id);
+    if (task && !task.custom) {
+      const log = loadPlannerLog();
+      const today = todayStr(new Date());
+      log[today] = log[today] || [];
+      if (!log[today].includes(task.cat)) log[today].push(task.cat);
+      savePlannerLog(log);
+    }
+  }
+  renderPlanner();
+}
+
+function renderPlanner() {
+  if (plannerSchedule.length === 0) buildPlannerSchedule(false);
+
+  const startTime = document.getElementById("plannerStartTime").value || "06:00";
+  const list = document.getElementById("plannerScheduleList");
+  list.innerHTML = "";
+
+  let cursor = startTime;
+  let totalMinutes = 0;
+  let doneMinutes = 0;
+
+  plannerSchedule.forEach(t => {
+    const startClock = cursor;
+    const endClock = addMinutesToTimeRaw(startClock, t.minutes);
+    totalMinutes += t.minutes;
+    if (t.done) doneMinutes += t.minutes;
+
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #182640;";
+    row.innerHTML = `
+      <input type="checkbox" ${t.done ? "checked" : ""} style="width:16px;height:16px;accent-color:#3b82f6;cursor:pointer;flex-shrink:0;" />
+      <div style="flex:1;">
+        <div style="font-size:13px;color:${t.done ? "#5c7699" : "#eaf4ff"};${t.done ? "text-decoration:line-through;" : ""}">${t.label}</div>
+        <div style="font-size:10px;color:#6c86ad;">${formatClock(startClock)} – ${formatClock(endClock)} · ${t.minutes} min</div>
+      </div>
+      ${t.custom ? `<button data-remove="${t.id}" style="background:none;border:none;color:#7a2a2a;font-size:14px;cursor:pointer;">✕</button>` : ""}
+    `;
+    row.querySelector('input[type="checkbox"]').addEventListener("click", () => togglePlannerDone(t.id));
+    const removeBtn = row.querySelector("[data-remove]");
+    if (removeBtn) removeBtn.addEventListener("click", () => removeCustomPlannerTask(t.id));
+    list.appendChild(row);
+
+    cursor = endClock;
+  });
+
+  document.getElementById("plannerTotalTime").textContent =
+    `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m planned`;
+  const pct = totalMinutes > 0 ? Math.round((doneMinutes / totalMinutes) * 100) : 0;
+  document.getElementById("plannerProgressFill").style.width = pct + "%";
+
+  renderPlannerCoach();
+  renderDietPlan();
+}
+
+// helper: add minutes to a "HH:MM" 24h string, return "HH:MM" 24h string
+function addMinutesToTimeRaw(timeStr, minutes) {
+  const [h, m] = timeStr.split(":").map(Number);
+  const total = h * 60 + m + minutes;
+  const nh = Math.floor((total % (24 * 60)) / 60);
+  const nm = total % 60;
+  return String(nh).padStart(2, "0") + ":" + String(nm).padStart(2, "0");
+}
+function formatClock(timeStr) {
+  const [h, m] = timeStr.split(":").map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+}
+
+function renderPlannerCoach() {
+  const box = document.getElementById("plannerCoachBox");
+  const parts = [];
+
+  if (state.streak >= 5) {
+    parts.push(`${state.streak}-day streak — momentum is doing a lot of the work for you right now, don't break the chain over something small.`);
+  } else if (state.streak === 0 && state.totalDays > 2) {
+    parts.push(`Streak's at zero. Today's plan is short and doable on purpose — clear a few blocks and it resets.`);
+  }
+
+  if (state.discipline < 50) {
+    parts.push(`Discipline is at ${state.discipline}/100. The 12-hour plan below is intentionally realistic, not punishing — finishing 70% of it beats abandoning 100% of it.`);
+  }
+
+  const journalEntries = Object.values(state.journal || {});
+  if (journalEntries.length > 0) {
+    const lastEntry = journalEntries[journalEntries.length - 1];
+    const text = (typeof lastEntry === "string" ? lastEntry : lastEntry.text || "").toLowerCase();
+    if (text.includes("tired") || text.includes("exhaust") || text.includes("burnt out") || text.includes("burnout")) {
+      parts.push(`Your last journal entry mentioned fatigue — today's plan leans on revision and lighter reading blocks rather than heavy new material.`);
+    } else if (text.includes("distract") || text.includes("focus")) {
+      parts.push(`You noted focus issues recently — try running the Study Timer in 25-minute blocks for today's Quant/English sessions specifically.`);
+    } else if (text.includes("confiden") || text.includes("good") || text.includes("great")) {
+      parts.push(`Your last entry sounded confident — good day to push a mock test section a little earlier while momentum's high.`);
+    }
+  }
+
+  if (parts.length === 0) {
+    parts.push(`No red flags in your recent data. Work the plan below, log it, and let the streak build.`);
+  }
+
+  box.textContent = parts.join(" ");
+}
+
+/* ---------- Diet plan (static reference, no API) ---------- */
+
+const DIET_PLANS = {
+  veg: [
+    { time: "Early morning", items: "Soaked almonds (6-8) + walnuts (2) + a glass of water", why: "Omega-3 and vitamin E for focus, easy on an empty stomach." },
+    { time: "Breakfast", items: "Poha/upma/oats with peanuts or paneer bhurji + a fruit (banana/apple)", why: "Complex carbs for sustained energy + protein for muscle repair." },
+    { time: "Mid-morning", items: "Sprouts chaat or a glass of milk/buttermilk", why: "Light protein top-up between study blocks." },
+    { time: "Lunch", items: "2 roti/rice + dal + paneer or soy chunks + sabzi + curd/salad", why: "Balanced macro plate — protein, complex carbs, fibre." },
+    { time: "Evening", items: "Roasted chana or peanut chikki + green tea/coffee (moderate)", why: "Protein + light caffeine before an evening study block, not too late." },
+    { time: "Dinner", items: "Roti/rice + dal or rajma/chole + vegetables (lighter than lunch)", why: "Lighter meal so digestion doesn't compete with sleep or late study." },
+    { time: "Before bed", items: "Warm milk with a pinch of turmeric, or a banana", why: "Supports overnight muscle recovery and calmer sleep." },
+  ],
+  nonveg: [
+    { time: "Early morning", items: "Soaked almonds (6-8) + walnuts (2) + a glass of water", why: "Omega-3 and vitamin E for focus, easy on an empty stomach." },
+    { time: "Breakfast", items: "3-4 egg whites + 1-2 whole eggs (boiled/omelette) + toast/oats", why: "High-quality complete protein to start muscle repair early." },
+    { time: "Mid-morning", items: "A boiled egg or a glass of milk", why: "Light protein top-up between study blocks." },
+    { time: "Lunch", items: "2 roti/rice + grilled chicken/fish (150-200g) + dal + sabzi + salad", why: "Balanced macro plate with a strong protein anchor." },
+    { time: "Evening", items: "Roasted chana or a boiled egg + green tea/coffee (moderate)", why: "Protein + light caffeine before an evening study block, not too late." },
+    { time: "Dinner", items: "Roti/rice + chicken or fish or dal + vegetables (lighter than lunch)", why: "Lighter meal so digestion doesn't compete with sleep or late study." },
+    { time: "Before bed", items: "A scoop of curd/paneer or warm milk", why: "Slow-digesting protein supports overnight muscle recovery." },
+  ],
+};
+
+function setDietMode(mode) {
+  try { localStorage.setItem(DIET_MODE_KEY, mode); } catch (e) {}
+  renderDietPlan();
+}
+
+function renderDietPlan() {
+  const mode = localStorage.getItem(DIET_MODE_KEY) || "veg";
+  document.getElementById("dietVegBtn").style.background = mode === "veg" ? "#3b82f6" : "#152238";
+  document.getElementById("dietNonVegBtn").style.background = mode === "nonveg" ? "#3b82f6" : "#152238";
+
+  const list = document.getElementById("dietPlanList");
+  list.innerHTML = "";
+  DIET_PLANS[mode].forEach(meal => {
+    const row = document.createElement("div");
+    row.style.cssText = "padding:8px 0;border-bottom:1px solid #182640;";
+    row.innerHTML = `
+      <div style="font-size:12px;color:#7fc3ff;font-weight:600;">${meal.time}</div>
+      <div style="font-size:13px;color:#eaf4ff;margin:2px 0;">${meal.items}</div>
+      <div style="font-size:10px;color:#6c86ad;">${meal.why}</div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+/* ===================== AI COACH (live, via your own Cloudflare Worker) ===================== */
+
+const AI_ENDPOINT_KEY = "solo-leveling-ai-endpoint";
+
+function getAIEndpoint() {
+  return (localStorage.getItem(AI_ENDPOINT_KEY) || "").trim();
+}
+
+function toggleAIConfig() {
+  const row = document.getElementById("aiConfigRow");
+  const isHidden = row.style.display === "none" || !row.style.display;
+  row.style.display = isHidden ? "block" : "none";
+  if (isHidden) document.getElementById("aiEndpointInput").value = getAIEndpoint();
+}
+
+function saveAIConfig() {
+  const val = document.getElementById("aiEndpointInput").value.trim();
+  if (val) {
+    localStorage.setItem(AI_ENDPOINT_KEY, val);
+  } else {
+    localStorage.removeItem(AI_ENDPOINT_KEY);
+  }
+  updateAIStatusDot();
+  document.getElementById("aiConfigRow").style.display = "none";
+}
+
+function updateAIStatusDot() {
+  const dot = document.getElementById("aiStatusDot");
+  if (!dot) return;
+  dot.style.background = getAIEndpoint() ? "#3fae54" : "#7a2a2a";
+}
+
+async function callAI(system, prompt) {
+  const endpoint = getAIEndpoint();
+  if (!endpoint) {
+    return { error: "AI isn't configured yet. Tap ⚙ Configure AI and paste your Cloudflare Worker URL (see README)." };
+  }
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ system, messages: [{ role: "user", content: prompt }] }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      return { error: data.error || `Request failed (${res.status})` };
+    }
+    return { text: data.text || "" };
+  } catch (err) {
+    return { error: "Couldn't reach the AI endpoint. Check the Worker URL and that it's deployed." };
+  }
+}
+
+function buildContextSummary() {
+  const now = new Date();
+  const phase = getPhase(now);
+  const phaseNames = { 1: "AFCAT grind", 2: "AFSB prep", 3: "CDS grind", 4: "post-CDS" };
+  return [
+    `Current phase: ${phaseNames[phase] || phase}.`,
+    `Level ${levelFromXP(state.totalXP).level}, streak ${state.streak} days, discipline ${state.discipline}/100.`,
+    `Today's quests done: ${Object.keys(state.todayQuests || {}).length}.`,
+  ].join(" ");
+}
+
+async function aiChatSend() {
+  const input = document.getElementById("aiChatInput");
+  const question = input.value.trim();
+  if (!question) return;
+  input.value = "";
+  await runAIRequest(
+    "You are a calm, direct SSB (Services Selection Board) prep coach for an Indian defence aspirant. Be specific and practical, keep answers reasonably concise, and never invent facts you're unsure of.",
+    `${buildContextSummary()}\n\nQuestion: ${question}`
+  );
+}
+
+async function aiQuickAction(type) {
+  if (type === "insight") {
+    await runAIRequest(
+      "You are an honest, encouraging SSB prep coach. Give a short, specific weekly assessment — 3-5 sentences, no fluff.",
+      `${buildContextSummary()} Give me an honest read on my week and one concrete thing to fix.`
+    );
+  } else if (type === "journal") {
+    const entries = Object.values(state.journal || {});
+    const last = entries.length ? (typeof entries[entries.length - 1] === "string" ? entries[entries.length - 1] : entries[entries.length - 1].text) : "";
+    if (!last) {
+      document.getElementById("aiResponseBox").textContent = "No journal entry found yet — add one in the System tab first.";
+      return;
+    }
+    await runAIRequest(
+      "You are an SSB prep coach reviewing a candidate's reflective journal entry. Comment on self-awareness, officer-like qualities shown or missing, and give one specific improvement. Keep it under 120 words.",
+      `Journal entry: "${last}"`
+    );
+  } else if (type === "plan") {
+    await runAIRequest(
+      "You design realistic 12-hour daily study schedules for SSB (Indian defence services) aspirants. Exclude gym, meditation, meals, and sleep — study only. Respond with a clear time-blocked list, one line per block, format: 'HH:MM AM/PM – HH:MM AM/PM: Task (why, 1 short clause)'. Keep total to 12 hours.",
+      `${buildContextSummary()} Build today's study schedule starting at ${document.getElementById("plannerStartTime").value || "06:00"}.`
+    );
+  } else if (type === "diet") {
+    const mode = localStorage.getItem(DIET_MODE_KEY) || "veg";
+    await runAIRequest(
+      "You give general nutrition guidance (not medical advice) for muscle growth and cognitive performance, for an Indian home-food context.",
+      `Give me a full day's meal plan (${mode === "veg" ? "vegetarian" : "non-vegetarian"}) for muscle and brain growth, timed around a heavy study day. Keep it concise, one line per meal.`
+    );
+  }
+}
+
+async function runAIRequest(system, prompt) {
+  const box = document.getElementById("aiResponseBox");
+  box.textContent = "Thinking…";
+  const result = await callAI(system, prompt);
+  box.textContent = result.error ? "⚠ " + result.error : result.text;
+}
+
+updateAIStatusDot();
+
+/* ---------- init planner tab ---------- */
 /* Restore last active tab (defaults to System) */
 const savedTab = localStorage.getItem(TAB_KEY);
 if (savedTab === "year") {
   switchTab("year");
+} else if (savedTab === "planner") {
+  switchTab("planner");
 } else {
   renderYearTracker(); // pre-render so it's ready the instant user switches tabs
 }
@@ -1679,288 +2093,6 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
     navigator.serviceWorker.register("service-worker.js").catch(() => {});
   });
 }
-
-/* ===================== AI COACH ===================== */
-/*
-  This talks to a small backend YOU control (a "proxy worker") that holds your
-  Claude API key server-side and forwards requests to Anthropic. It never talks
-  to api.anthropic.com directly from this page, because a key can't safely live
-  in public front-end code. See AI_COACH_SETUP.md for how to deploy the proxy
-  (free, takes about 5 minutes on Cloudflare Workers).
-*/
-
-const AI_ENDPOINT_KEY = "solo-leveling-ai-endpoint";
-const AI_CACHE_KEY = "solo-leveling-ai-cache";
-
-function getAIEndpoint() {
-  return (localStorage.getItem(AI_ENDPOINT_KEY) || "").trim();
-}
-
-function loadAICache() {
-  try {
-    const raw = localStorage.getItem(AI_CACHE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch (e) { return {}; }
-}
-function saveAICache(cache) {
-  try { localStorage.setItem(AI_CACHE_KEY, JSON.stringify(cache)); } catch (e) {}
-}
-let aiCache = loadAICache();
-
-function toggleAISetup() {
-  const row = document.getElementById("aiSetupRow");
-  const isHidden = row.style.display === "none" || !row.style.display;
-  row.style.display = isHidden ? "block" : "none";
-  if (isHidden) {
-    document.getElementById("aiEndpointInput").value = getAIEndpoint();
-  }
-}
-
-function saveAIEndpoint() {
-  const val = document.getElementById("aiEndpointInput").value.trim();
-  localStorage.setItem(AI_ENDPOINT_KEY, val);
-  const status = document.getElementById("aiSetupStatus");
-  status.textContent = val ? "Saved. You're connected." : "Cleared — AI Coach is now disconnected.";
-  status.style.color = val ? "#8be6a8" : "#5c7699";
-}
-
-function switchCoachTab(tab) {
-  ["plan", "journal", "diet"].forEach(t => {
-    document.getElementById("coachPane-" + t).style.display = t === tab ? "block" : "none";
-    document.getElementById("coachTabBtn-" + t).classList.toggle("active", t === tab);
-  });
-}
-
-/* Generic call to your proxy worker. The worker forwards {system, messages} to
-   Anthropic's /v1/messages endpoint using its own securely-stored API key. */
-async function callAI(systemPrompt, userPrompt, maxTokens) {
-  const endpoint = getAIEndpoint();
-  if (!endpoint) {
-    const err = new Error("NO_ENDPOINT");
-    err.code = "NO_ENDPOINT";
-    throw err;
-  }
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: maxTokens || 1200,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-    }),
-  });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error("Request failed (" + res.status + "). " + text.slice(0, 200));
-  }
-  const data = await res.json();
-  const block = (data.content || []).find(b => b.type === "text");
-  if (!block) throw new Error("The AI didn't return any text — check your worker logs.");
-  return block.text;
-}
-
-function aiErrorMessage(err) {
-  if (err && err.code === "NO_ENDPOINT") {
-    return "No AI connection set up yet. Tap ⚙ Connection above, paste your proxy URL, and save. See AI_COACH_SETUP.md for how to create one.";
-  }
-  return "Couldn't reach the AI right now — " + (err && err.message ? err.message : "unknown error") + ". Check your connection and that your proxy worker is deployed and awake.";
-}
-
-function stripCodeFence(text) {
-  return text.trim().replace(/^```(json)?/i, "").replace(/```$/, "").trim();
-}
-
-/* ---------- Study Plan ---------- */
-
-function getPlanState(dateStr) {
-  return (aiCache.plans && aiCache.plans[dateStr]) || null;
-}
-function savePlanState(dateStr, blocks) {
-  aiCache.plans = aiCache.plans || {};
-  aiCache.plans[dateStr] = blocks;
-  saveAICache(aiCache);
-}
-
-async function generateStudyPlan() {
-  const btn = document.getElementById("genPlanBtn");
-  const statusEl = document.getElementById("planStatus");
-  const notes = document.getElementById("planNotesInput").value.trim();
-  const now = new Date();
-  const phase = getPhase(now);
-  const info = getPhaseInfo(phase, now);
-  const weakStat = Object.entries(state.stats).reduce((a, b) => (b[1] < a[1] ? b : a))[0];
-
-  const phaseFocus = {
-    1: "AFCAT written exam: English, Reasoning, General Awareness, Quant, plus basic Maths.",
-    2: "AFSB interview stage: Lecturette practice, PPDT/TAT storytelling, GTO task rehearsal, OLQ reflection, mock interview Q&A.",
-    3: "CDS written exam: English, General Knowledge/Current Affairs, Elementary Mathematics.",
-    4: "Post-exam build phase: Python programming practice and finance/markets learning + content building.",
-  }[phase];
-
-  const system = `You are a disciplined, encouraging study coach for a candidate preparing for Indian Armed Forces entry exams (AFCAT/AFSB/CDS) and later Python + finance skill-building. You build realistic daily study schedules. Respond with ONLY a JSON array, no prose, no markdown fences, no explanation. Each item: {"time": "HH:MM–HH:MM", "task": "short specific task"}. Blocks should sum to about 12 hours of STUDY time only — do NOT include gym, workout, running, meditation, meals, or sleep, those are tracked separately. Include short 5-10 minute breaks as their own array items labeled as breaks so the person can see them, but don't count breaks toward the 12 hours. Be specific to the current focus area, not generic ("revise topic" is too vague — name an actual sub-topic or activity).`;
-
-  const user = `Current phase: ${info.name}. Focus for this phase: ${phaseFocus}${info.daysLeft !== undefined ? ` (${info.daysLeft} days left until ${info.label})` : ""}.
-Weakest current stat: ${STAT_NAMES[weakStat]} — bias some blocks toward this if it fits the phase focus.
-${notes ? "Notes from the person for today: " + notes : "No special notes for today — plan a full standard day."}
-Build today's 12-hour study schedule now.`;
-
-  btn.disabled = true;
-  statusEl.innerHTML = `<div class="ai-loading">Building today's schedule...</div>`;
-  document.getElementById("planBlocks").innerHTML = "";
-
-  try {
-    const raw = await callAI(system, user, 1500);
-    const cleaned = stripCodeFence(raw);
-    let blocks = JSON.parse(cleaned);
-    if (!Array.isArray(blocks)) throw new Error("Unexpected response format.");
-    blocks = blocks.map((b, i) => ({
-      id: "b" + Date.now() + "_" + i,
-      time: b.time || "",
-      task: b.task || "",
-      done: false,
-    }));
-    savePlanState(todayStr(now), blocks);
-    statusEl.innerHTML = "";
-    renderPlanBlocks();
-  } catch (err) {
-    statusEl.innerHTML = `<div class="ai-error">${aiErrorMessage(err)}</div>`;
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-function renderPlanBlocks() {
-  const now = new Date();
-  const dateStr = todayStr(now);
-  const blocks = getPlanState(dateStr) || [];
-  const container = document.getElementById("planBlocks");
-  const addRow = document.getElementById("planAddRow");
-  container.innerHTML = "";
-
-  if (!blocks.length) {
-    addRow.style.display = "none";
-    return;
-  }
-  addRow.style.display = "flex";
-
-  blocks.forEach(b => {
-    const row = document.createElement("div");
-    row.className = "ai-block";
-    row.innerHTML = `
-      <input type="checkbox" ${b.done ? "checked" : ""} data-id="${b.id}" />
-      <div class="ai-block-body">
-        <div class="ai-block-time">${b.time}</div>
-        <div class="ai-block-text ${b.done ? "done" : ""}" contenteditable="true" data-id="${b.id}">${b.task}</div>
-      </div>
-      <button class="ai-block-del" data-id="${b.id}" title="Remove">×</button>
-    `;
-    row.querySelector('input[type="checkbox"]').addEventListener("change", (e) => {
-      togglePlanBlockDone(b.id, e.target.checked);
-    });
-    row.querySelector(".ai-block-text").addEventListener("blur", (e) => {
-      editPlanBlockText(b.id, e.target.textContent);
-    });
-    row.querySelector(".ai-block-del").addEventListener("click", () => {
-      deletePlanBlock(b.id);
-    });
-    container.appendChild(row);
-  });
-}
-
-function togglePlanBlockDone(id, done) {
-  const dateStr = todayStr(new Date());
-  const blocks = getPlanState(dateStr) || [];
-  const b = blocks.find(x => x.id === id);
-  if (b) { b.done = done; savePlanState(dateStr, blocks); renderPlanBlocks(); }
-}
-function editPlanBlockText(id, text) {
-  const dateStr = todayStr(new Date());
-  const blocks = getPlanState(dateStr) || [];
-  const b = blocks.find(x => x.id === id);
-  if (b) { b.task = text.trim(); savePlanState(dateStr, blocks); }
-}
-function deletePlanBlock(id) {
-  const dateStr = todayStr(new Date());
-  let blocks = getPlanState(dateStr) || [];
-  blocks = blocks.filter(x => x.id !== id);
-  savePlanState(dateStr, blocks);
-  renderPlanBlocks();
-}
-function addPlanBlock() {
-  const timeInput = document.getElementById("newBlockTime");
-  const textInput = document.getElementById("newBlockText");
-  const time = timeInput.value.trim();
-  const task = textInput.value.trim();
-  if (!task) return;
-  const dateStr = todayStr(new Date());
-  const blocks = getPlanState(dateStr) || [];
-  blocks.push({ id: "b" + Date.now(), time: time || "—", task, done: false });
-  savePlanState(dateStr, blocks);
-  timeInput.value = "";
-  textInput.value = "";
-  renderPlanBlocks();
-}
-
-/* ---------- Journal / Lecturette Feedback ---------- */
-
-async function getJournalFeedback() {
-  const btn = document.getElementById("getFeedbackBtn");
-  const statusEl = document.getElementById("feedbackStatus");
-  const outputEl = document.getElementById("feedbackOutput");
-  const text = document.getElementById("feedbackInput").value.trim();
-  if (!text) {
-    statusEl.innerHTML = `<div class="ai-error">Paste something first — a lecturette script, OLQ reflection, or your weekly reflection.</div>`;
-    return;
-  }
-
-  const system = `You are an SSB (Services Selection Board) preparation mentor reviewing a candidate's written or spoken practice material — could be a Lecturette script, an OLQ (Officer-Like Qualities) reflection, or a weekly self-reflection. Give direct, specific, constructive feedback in plain prose (no markdown headers, a few short paragraphs). Cover: structure and clarity, what OLQs it demonstrates or fails to demonstrate (e.g. initiative, reasoning ability, social adaptability, determination), and one concrete thing to improve. Be honest but encouraging — this is a person actively training, not a finished product.`;
-  const user = `Here is the entry:\n\n${text}`;
-
-  btn.disabled = true;
-  statusEl.innerHTML = `<div class="ai-loading">Reading it over...</div>`;
-  outputEl.innerHTML = "";
-
-  try {
-    const response = await callAI(system, user, 900);
-    outputEl.innerHTML = `<div class="insight">${response.replace(/\n/g, "<br/>")}</div>`;
-    statusEl.innerHTML = "";
-  } catch (err) {
-    statusEl.innerHTML = `<div class="ai-error">${aiErrorMessage(err)}</div>`;
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-/* ---------- Diet Plan ---------- */
-
-async function generateDietPlan() {
-  const btn = document.getElementById("genDietBtn");
-  const statusEl = document.getElementById("dietStatus");
-  const outputEl = document.getElementById("dietOutput");
-  const pref = document.getElementById("dietPrefSelect").value;
-  const access = document.getElementById("dietBudgetSelect").value;
-
-  const system = `You are a general wellness assistant giving food-group-level nutrition guidance to a physically active student training for a demanding fitness and academic routine (strength training, running, and long study hours). Give general, practical guidance only — food groups, meal timing around workouts, hydration, and simple examples. Do NOT give exact calorie counts, macro gram targets, or supplement dosing — you don't know this person's body weight, medical history, or goals in that detail. Structure the day as: on waking, post-workout, main meals, evening/study-fuel snacks, and before sleep. Keep it realistic for the food access described. End with one honest line noting this is general guidance, not a personalized medical or dietetic plan.`;
-  const user = `Dietary preference: ${pref}. Food access: ${access}. Today involves strength training, a run, and roughly 12 hours of study. Give today's general meal structure.`;
-
-  btn.disabled = true;
-  statusEl.innerHTML = `<div class="ai-loading">Putting today's meals together...</div>`;
-  outputEl.innerHTML = "";
-
-  try {
-    const response = await callAI(system, user, 900);
-    outputEl.innerHTML = `<div class="insight">${response.replace(/\n/g, "<br/>")}</div>`;
-    statusEl.innerHTML = "";
-  } catch (err) {
-    statusEl.innerHTML = `<div class="ai-error">${aiErrorMessage(err)}</div>`;
-  } finally {
-    btn.disabled = false;
-  }
-}
-
-/* Render whatever plan already exists for today on load */
-renderPlanBlocks();
 </script>
 
 </body>
