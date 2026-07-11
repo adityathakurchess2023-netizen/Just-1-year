@@ -1,15 +1,4 @@
-/**
- * THE SYSTEM — AI Coach proxy worker.
- *
- * This is the ONLY piece of this project that touches your real Anthropic API key.
- * It runs on Cloudflare's free tier, holds your key as a secret (never visible to
- * anyone visiting your site), and forwards requests from the app to Claude.
- *
- * Deploy steps are in AI_COACH_SETUP.md — you do not need to understand Cloudflare
- * to follow them, just copy/paste commands.
- */
-
-const ALLOWED_ORIGIN = "*"; // tighten to your github.io URL once it's working, e.g. "https://adityathakurchess2023-netizen.github.io"
+const ALLOWED_ORIGIN = "*"; // tighten to your github.io URL once it's working
 
 export default {
   async fetch(request, env) {
@@ -29,43 +18,76 @@ export default {
       return json({ error: "Invalid JSON body." }, 400);
     }
 
-    const { model, system, messages, max_tokens } = body;
+    const { system, messages, max_tokens } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return json({ error: "Missing 'messages' array." }, 400);
     }
 
-    if (!env.ANTHROPIC_API_KEY) {
-      return json({ error: "Server misconfigured: ANTHROPIC_API_KEY secret is not set on this worker." }, 500);
+    if (!env.GEMINI_API_KEY) {
+      return json({ error: "Server misconfigured: GEMINI_API_KEY secret is not set." }, 500);
     }
 
+    // Translate the Claude-style messages into Gemini format
+    const contents = messages.map(m => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }]
+    }));
+
+    const geminiPayload = {
+      contents: contents,
+      generationConfig: {
+        maxOutputTokens: max_tokens || 1200,
+      }
+    };
+
+    if (system) {
+      geminiPayload.systemInstruction = {
+        parts: [{ text: system }]
+      };
+    }
+    
     try {
-      const upstream = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": env.ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: model || "claude-sonnet-4-6",
-          max_tokens: max_tokens || 1200,
-          system: system || undefined,
-          messages,
-        }),
-      });
+      const upstream = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(geminiPayload),
+        }
+      );
 
-      const data = await upstream.text();
+      const data = await upstream.json();
 
-      return new Response(data, {
-        status: upstream.status,
+      if (!upstream.ok) {
+        return json({ error: "Gemini API error: " + (data.error?.message || "Unknown error") }, 502);
+      }
+
+      const candidate = data.candidates?.[0];
+      if (!candidate || !candidate.content) {
+        return json({ error: "Gemini API returned no content. (Check safety settings or response)." }, 500);
+      }
+
+      const outputText = candidate.content.parts?.[0]?.text || "";
+
+      // Translate back to the Claude-style response that index.html expects
+      const responseBody = {
+        content: [
+          { type: "text", text: outputText }
+        ]
+      };
+
+      return new Response(JSON.stringify(responseBody), {
+        status: 200,
         headers: {
           "Content-Type": "application/json",
           ...corsHeaders(),
         },
       });
     } catch (err) {
-      return json({ error: "Upstream request to Anthropic failed: " + err.message }, 502);
+      return json({ error: "Upstream request to Gemini failed: " + err.message }, 502);
     }
   },
 };
