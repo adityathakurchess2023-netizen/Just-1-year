@@ -1830,11 +1830,12 @@ async function aiBuildSchedule(targetId) {
   const system =
     "You design daily study schedules for SSB (Indian defence services) aspirants. " +
     "The user's specific instructions ALWAYS take priority over any default — if they specify subject order, block lengths, a study/break ratio (like 90/10), a specific structure, or a shorter/longer day, follow that exactly rather than falling back to a generic template. " +
+    "CRITICAL RULE ABOUT BREAKS: if the user specifies any study/break pattern (e.g. '90 min study, 10 min break', '90/10 rule', 'Pomodoro', etc.), you MUST insert the break as its OWN separate item in the JSON array immediately after each study block it follows — every single time, with no exceptions. A break is never merged into a study block's minutes, never skipped, and never left implicit. Label break items simply \"Break\" (or \"Short break\" / \"Long break\" if the user distinguishes them) with minutes set to exactly what the user specified. For example, if the user says '90 min study, 10 min break', the output must alternate: study block (90 min), Break (10 min), study block (90 min), Break (10 min), and so on, for as many study blocks as the schedule needs. Do not put a break after the very last block of the day. " +
     "Exclude gym, meditation, meals, and sleep unless the user explicitly asks to include them. " +
     "If no specific instructions are given, default to a well-rounded ~15 hour (900 minute) day across SSB-relevant subjects. " +
     'Respond with ONLY a valid JSON array, no markdown formatting, no code fences, no explanation before or after. ' +
     'Each item must look like {"label": "short task name", "minutes": integer}, minutes as a multiple of 5. ' +
-    "Number of blocks, block length, and total duration are entirely up to what best fits the user's instructions.";
+    "Number of blocks, block length, and total duration are entirely up to what best fits the user's instructions, but breaks between study blocks are mandatory whenever the user specifies a study/break pattern.";
   const prompt =
     `${buildContextSummary()}\n\nBuild today's study schedule starting at ${startTime}.` +
     (instructions ? ` The user's instructions below are the priority — follow them precisely: ${instructions}` : "");
