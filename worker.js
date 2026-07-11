@@ -45,9 +45,12 @@ export default {
       };
     }
     
+    // Automatically clean the key of any hidden terminal spaces or newlines
+    const cleanKey = env.GEMINI_API_KEY.trim();
+    
     try {
       const upstream = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cleanKey}`,
         {
           method: "POST",
           headers: {
