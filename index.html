@@ -270,6 +270,7 @@
   <button class="tab-btn active" id="tabBtnSystem" onclick="switchTab('system')">⚔ SYSTEM</button>
   <button class="tab-btn" id="tabBtnYear" onclick="switchTab('year')">◎ YEAR TRACKER</button>
   <button class="tab-btn" id="tabBtnPlanner" onclick="switchTab('planner')">🧭 PLANNER</button>
+  <button class="tab-btn" id="tabBtnMock" onclick="switchTab('mock')">📝 MOCKS</button>
 </div>
 
 <div id="systemView">
@@ -578,6 +579,82 @@
 </div>
 <!-- /plannerView -->
 
+<div id="mockView" style="display:none;width:100%;max-width:560px;">
+
+  <div class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="section-title" style="margin:0;">📝 Mock Test Tracker</div>
+      <button onclick="toggleMockCustomize()" style="background:none;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;">⚙ Customize</button>
+    </div>
+    <p style="font-size:10px;color:#5c7699;margin:6px 0 10px;">Log every sectional mock daily and your full mock on Sundays. Sections and max marks are yours to define.</p>
+
+    <div id="mockCustomizeRow" style="display:none;margin-top:6px;background:#0d1a2e;border:1px solid #2a4a7a;border-radius:6px;padding:10px;">
+      <div style="font-size:10px;color:#7c93b8;margin-bottom:8px;letter-spacing:0.05em;">SECTIONAL SUBJECTS</div>
+      <div id="mockSubjectRows"></div>
+      <button onclick="addMockSubjectRow()" style="background:#152238;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;margin-top:4px;">+ Add subject</button>
+
+      <div style="font-size:10px;color:#7c93b8;margin:14px 0 6px;letter-spacing:0.05em;">FULL MOCK</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <label style="font-size:11px;color:#9db6da;">Max marks</label>
+        <input type="number" id="mockFullMaxInput" min="1" style="width:90px;background:#0a1220;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:6px;font-size:12px;" />
+      </div>
+
+      <button onclick="saveMockCustomize()" style="background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:7px 12px;font-family:'Orbitron',sans-serif;font-size:10px;cursor:pointer;margin-top:12px;">Save</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="section-title">Log a Score</div>
+    <div id="mockSundayHint" style="display:none;font-size:11px;color:#ffd166;background:rgba(255,209,102,0.06);border:1px solid rgba(255,209,102,0.3);border-radius:6px;padding:6px 8px;margin-bottom:10px;">📅 It's Sunday — Full Mock day.</div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <div style="flex:1;min-width:140px;">
+        <div style="font-size:10px;color:#7c93b8;margin-bottom:4px;">Date</div>
+        <input type="date" id="mockEntryDate" onchange="mockDateChanged()" style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:7px;font-size:13px;box-sizing:border-box;" />
+      </div>
+      <div style="flex:1;min-width:140px;">
+        <div style="font-size:10px;color:#7c93b8;margin-bottom:4px;">Type</div>
+        <select id="mockEntryType" onchange="mockTypeChanged()" style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:7px;font-size:13px;box-sizing:border-box;">
+          <option value="sectional">Sectional Mock</option>
+          <option value="full">Full Mock</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="mockSubjectSelectRow" style="margin-bottom:8px;">
+      <div style="font-size:10px;color:#7c93b8;margin-bottom:4px;">Subject</div>
+      <select id="mockEntrySubject" onchange="mockSubjectChanged()" style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:7px;font-size:13px;box-sizing:border-box;"></select>
+    </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <div style="flex:1;min-width:100px;">
+        <div style="font-size:10px;color:#7c93b8;margin-bottom:4px;">Score</div>
+        <input type="number" id="mockEntryScore" min="0" style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:7px;font-size:13px;box-sizing:border-box;" />
+      </div>
+      <div style="flex:1;min-width:100px;">
+        <div style="font-size:10px;color:#7c93b8;margin-bottom:4px;">Out of</div>
+        <input type="number" id="mockEntryMax" min="1" style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:7px;font-size:13px;box-sizing:border-box;" />
+      </div>
+    </div>
+
+    <input type="text" id="mockEntryNotes" placeholder="Notes (optional) — weak topics, silly mistakes..." style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:8px;font-size:12px;box-sizing:border-box;margin-bottom:10px;" />
+
+    <button onclick="addMockEntry()" style="width:100%;background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:9px;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:0.05em;cursor:pointer;">+ Log Score</button>
+  </div>
+
+  <div class="panel">
+    <div class="section-title">Performance Snapshot</div>
+    <div id="mockStatsGrid"></div>
+  </div>
+
+  <div class="panel">
+    <div class="section-title">History</div>
+    <div id="mockHistoryList" style="font-size:12px;color:#5c7699;">No mocks logged yet — log your first one above.</div>
+  </div>
+
+</div>
+<!-- /mockView -->
+
 <div class="modal-bg" id="bossModal">
   <div class="modal">
     <h3>⚔ BOSS BATTLE</h3>
@@ -629,16 +706,20 @@ function switchTab(tab) {
   const sys = document.getElementById("systemView");
   const yr = document.getElementById("yearView");
   const pl = document.getElementById("plannerView");
+  const mk = document.getElementById("mockView");
   const btnSys = document.getElementById("tabBtnSystem");
   const btnYr = document.getElementById("tabBtnYear");
   const btnPl = document.getElementById("tabBtnPlanner");
+  const btnMk = document.getElementById("tabBtnMock");
 
   sys.style.display = "none";
   yr.style.display = "none";
   pl.style.display = "none";
+  mk.style.display = "none";
   btnSys.classList.remove("active");
   btnYr.classList.remove("active");
   btnPl.classList.remove("active");
+  btnMk.classList.remove("active");
 
   if (tab === "year") {
     yr.style.display = "flex";
@@ -648,6 +729,10 @@ function switchTab(tab) {
     pl.style.display = "flex";
     btnPl.classList.add("active");
     renderPlanner();
+  } else if (tab === "mock") {
+    mk.style.display = "flex";
+    btnMk.classList.add("active");
+    renderMockView();
   } else {
     tab = "system";
     sys.style.display = "flex";
@@ -1050,6 +1135,8 @@ function exportData() {
     yearTracker: yearCells,
     timerSettings: timerSettings,
     theme: localStorage.getItem(THEME_KEY) || "blue",
+    mockSettings: mockSettings,
+    mockData: mockData,
   };
   const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -1067,7 +1154,7 @@ function importData(file) {
   reader.onload = (e) => {
     try {
       const parsed = JSON.parse(e.target.result);
-      if (!confirm("Import this backup? It will replace your current progress across System, Year Tracker, and Timer settings.")) return;
+      if (!confirm("Import this backup? It will replace your current progress across System, Year Tracker, Mock Tracker, and Timer settings.")) return;
 
       // Support both the new combined bundle format and the old System-only export
       const isBundle = parsed.__kind === "solo-leveling-full-backup";
@@ -1103,6 +1190,15 @@ function importData(file) {
           }
         }
         if (parsed.theme) applyTheme(parsed.theme);
+        if (parsed.mockSettings && Array.isArray(parsed.mockSettings.subjects)) {
+          mockSettings = parsed.mockSettings;
+          saveMockSettingsToStorage();
+        }
+        if (Array.isArray(parsed.mockData)) {
+          mockData = parsed.mockData;
+          saveMockDataToStorage();
+        }
+        renderMockView();
       }
 
       render();
@@ -2302,6 +2398,275 @@ function copyAIResponse() {
 
 updateAIStatusDot();
 
+/* ---------- Mock Test Tracker ---------- */
+const MOCK_SETTINGS_KEY = "solo-leveling-mock-settings";
+const MOCK_DATA_KEY = "solo-leveling-mock-data";
+
+function defaultMockSettings() {
+  return {
+    subjects: [
+      { label: "Maths", max: 100 },
+      { label: "Reasoning", max: 100 },
+      { label: "English", max: 100 },
+      { label: "GS", max: 100 },
+    ],
+    fullMax: 300,
+  };
+}
+
+let mockSettings = loadMockSettings();
+let mockData = loadMockData();
+
+function loadMockSettings() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(MOCK_SETTINGS_KEY));
+    if (parsed && Array.isArray(parsed.subjects) && parsed.subjects.length) return parsed;
+  } catch (e) {}
+  return defaultMockSettings();
+}
+function saveMockSettingsToStorage() {
+  try { localStorage.setItem(MOCK_SETTINGS_KEY, JSON.stringify(mockSettings)); } catch (e) {}
+}
+function loadMockData() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(MOCK_DATA_KEY));
+    if (Array.isArray(parsed)) return parsed;
+  } catch (e) {}
+  return [];
+}
+function saveMockDataToStorage() {
+  try { localStorage.setItem(MOCK_DATA_KEY, JSON.stringify(mockData)); } catch (e) {}
+}
+
+function mockPct(entry) {
+  if (!entry.max) return 0;
+  return Math.max(0, Math.min(100, Math.round((entry.score / entry.max) * 1000) / 10));
+}
+function mockColorForPct(pct) {
+  if (pct >= 75) return "#2fae54";
+  if (pct >= 50) return "#ffd166";
+  return "#e0483f";
+}
+
+function toggleMockCustomize() {
+  const row = document.getElementById("mockCustomizeRow");
+  const show = row.style.display === "none";
+  row.style.display = show ? "block" : "none";
+  if (show) renderMockCustomizeRows();
+}
+
+function renderMockCustomizeRows() {
+  const wrap = document.getElementById("mockSubjectRows");
+  wrap.innerHTML = "";
+  mockSettings.subjects.forEach((s, i) => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;gap:6px;align-items:center;margin-bottom:6px;";
+    row.innerHTML = `
+      <input type="text" value="${s.label.replace(/"/g, "&quot;")}" data-mock-subj-label="${i}" placeholder="Subject" style="flex:2;min-width:90px;background:#0a1220;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:6px;font-size:12px;" />
+      <input type="number" value="${s.max}" min="1" data-mock-subj-max="${i}" placeholder="Max" style="width:70px;background:#0a1220;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:6px;font-size:12px;" />
+      <button data-mock-subj-remove="${i}" style="background:none;border:none;color:#7a2a2a;font-size:14px;cursor:pointer;">✕</button>
+    `;
+    wrap.appendChild(row);
+  });
+  wrap.querySelectorAll("[data-mock-subj-remove]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.getAttribute("data-mock-subj-remove"));
+      mockSettings.subjects.splice(idx, 1);
+      renderMockCustomizeRows();
+    });
+  });
+  document.getElementById("mockFullMaxInput").value = mockSettings.fullMax;
+}
+
+function addMockSubjectRow() {
+  mockSettings.subjects.push({ label: "", max: 100 });
+  renderMockCustomizeRows();
+}
+
+function saveMockCustomize() {
+  const labelInputs = document.querySelectorAll("[data-mock-subj-label]");
+  const maxInputs = document.querySelectorAll("[data-mock-subj-max]");
+  const subjects = [];
+  labelInputs.forEach((inp, i) => {
+    const label = inp.value.trim();
+    const max = Math.max(1, parseInt(maxInputs[i].value, 10) || 100);
+    if (label) subjects.push({ label, max });
+  });
+  if (subjects.length) mockSettings.subjects = subjects;
+  const fullMax = Math.max(1, parseInt(document.getElementById("mockFullMaxInput").value, 10) || mockSettings.fullMax);
+  mockSettings.fullMax = fullMax;
+  saveMockSettingsToStorage();
+  document.getElementById("mockCustomizeRow").style.display = "none";
+  renderMockView();
+}
+
+function mockPopulateSubjectDropdown() {
+  const sel = document.getElementById("mockEntrySubject");
+  const prev = sel.value;
+  sel.innerHTML = "";
+  mockSettings.subjects.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.label;
+    opt.textContent = s.label;
+    sel.appendChild(opt);
+  });
+  if (prev && mockSettings.subjects.some(s => s.label === prev)) sel.value = prev;
+}
+
+function mockSubjectChanged() {
+  const subj = mockSettings.subjects.find(s => s.label === document.getElementById("mockEntrySubject").value);
+  if (subj) document.getElementById("mockEntryMax").value = subj.max;
+}
+
+function mockTypeChanged() {
+  const type = document.getElementById("mockEntryType").value;
+  document.getElementById("mockSubjectSelectRow").style.display = type === "sectional" ? "block" : "none";
+  if (type === "full") {
+    document.getElementById("mockEntryMax").value = mockSettings.fullMax;
+  } else {
+    mockSubjectChanged();
+  }
+}
+
+function mockDateChanged() {
+  const dateVal = document.getElementById("mockEntryDate").value;
+  if (!dateVal) return;
+  const d = new Date(dateVal + "T00:00:00");
+  const isSunday = d.getDay() === 0;
+  document.getElementById("mockSundayHint").style.display = isSunday ? "block" : "none";
+  document.getElementById("mockEntryType").value = isSunday ? "full" : "sectional";
+  mockTypeChanged();
+}
+
+function addMockEntry() {
+  const date = document.getElementById("mockEntryDate").value || todayStr(new Date());
+  const type = document.getElementById("mockEntryType").value;
+  const subject = type === "sectional" ? document.getElementById("mockEntrySubject").value : null;
+  const score = Number(document.getElementById("mockEntryScore").value);
+  const max = Number(document.getElementById("mockEntryMax").value);
+  const notes = document.getElementById("mockEntryNotes").value.trim();
+
+  if (isNaN(score) || score < 0 || !max || max <= 0) {
+    alert("Enter a valid score and max marks.");
+    return;
+  }
+  if (type === "sectional" && !subject) {
+    alert("Pick a subject, or add one via Customize.");
+    return;
+  }
+
+  mockData.push({
+    id: "mock_" + Date.now(),
+    date,
+    type,
+    subject,
+    score,
+    max,
+    notes,
+    createdAt: new Date().toISOString(),
+  });
+  saveMockDataToStorage();
+
+  document.getElementById("mockEntryScore").value = "";
+  document.getElementById("mockEntryNotes").value = "";
+
+  renderMockView();
+}
+
+function deleteMockEntry(id) {
+  mockData = mockData.filter(e => e.id !== id);
+  saveMockDataToStorage();
+  renderMockView();
+}
+
+function mockTrendArrow(currentPct, prevPct) {
+  if (prevPct === null || prevPct === undefined) return "";
+  const diff = currentPct - prevPct;
+  if (Math.abs(diff) < 0.5) return `<span style="color:#9db6da;">▬ flat</span>`;
+  if (diff > 0) return `<span style="color:#2fae54;">▲ +${diff.toFixed(1)}%</span>`;
+  return `<span style="color:#e0483f;">▼ ${diff.toFixed(1)}%</span>`;
+}
+
+function renderMockStats() {
+  const grid = document.getElementById("mockStatsGrid");
+  grid.innerHTML = "";
+
+  const groups = mockSettings.subjects.map(s => ({ key: s.label, label: s.label, type: "sectional" }));
+  groups.push({ key: "__full__", label: "Full Mock", type: "full" });
+
+  let anyData = false;
+
+  groups.forEach(g => {
+    const entries = mockData
+      .filter(e => (g.type === "full" ? e.type === "full" : e.type === "sectional" && e.subject === g.key))
+      .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
+
+    if (!entries.length) return;
+    anyData = true;
+
+    const last5 = entries.slice(-5);
+    const avgPct = Math.round((last5.reduce((s, e) => s + mockPct(e), 0) / last5.length) * 10) / 10;
+    const latest = entries[entries.length - 1];
+    const latestPct = mockPct(latest);
+    const prevPct = entries.length > 1 ? mockPct(entries[entries.length - 2]) : null;
+
+    const box = document.createElement("div");
+    box.className = "stat-box";
+    box.style.marginBottom = "8px";
+    box.innerHTML = `
+      <div class="stat-name"><span>${g.label}</span><span>${mockTrendArrow(latestPct, prevPct)}</span></div>
+      <div class="stat-val" style="color:${mockColorForPct(latestPct)};">${latest.score}/${latest.max} · ${latestPct}%</div>
+      <div style="font-size:10px;color:#9db6da;margin-top:2px;">Last ${last5.length} avg: ${avgPct}% · ${entries.length} logged</div>
+    `;
+    grid.appendChild(box);
+  });
+
+  if (!anyData) {
+    grid.innerHTML = `<div style="font-size:12px;color:#5c7699;">Log a few scores to see trends here.</div>`;
+  }
+}
+
+function renderMockHistory() {
+  const list = document.getElementById("mockHistoryList");
+  const sorted = [...mockData].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+
+  if (!sorted.length) {
+    list.innerHTML = "No mocks logged yet — log your first one above.";
+    return;
+  }
+
+  list.innerHTML = "";
+  sorted.forEach(e => {
+    const pct = mockPct(e);
+    const label = e.type === "full" ? "Full Mock" : e.subject;
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #182640;";
+    row.innerHTML = `
+      <div style="flex:1;">
+        <div style="font-size:13px;color:#eaf4ff;">${label} <span class="quest-tag">${e.type === "full" ? "FULL" : "SECTIONAL"}</span></div>
+        <div style="font-size:10px;color:#6c86ad;">${e.date} · ${e.score}/${e.max} · <span style="color:${mockColorForPct(pct)};">${pct}%</span>${e.notes ? " · " + e.notes.replace(/</g, "&lt;") : ""}</div>
+      </div>
+      <button data-mock-del="${e.id}" style="background:none;border:none;color:#7a2a2a;font-size:14px;cursor:pointer;flex-shrink:0;">✕</button>
+    `;
+    list.appendChild(row);
+  });
+  list.querySelectorAll("[data-mock-del]").forEach(btn => {
+    btn.addEventListener("click", () => deleteMockEntry(btn.getAttribute("data-mock-del")));
+  });
+}
+
+function renderMockView() {
+  const dateInput = document.getElementById("mockEntryDate");
+  if (!dateInput.value) dateInput.value = todayStr(new Date());
+
+  mockPopulateSubjectDropdown();
+  mockDateChanged();
+  if (document.getElementById("mockEntryMax").value === "") mockSubjectChanged();
+
+  renderMockStats();
+  renderMockHistory();
+}
+
 /* ---------- init planner tab ---------- */
 /* Restore last active tab (defaults to System) */
 const savedTab = localStorage.getItem(TAB_KEY);
@@ -2309,6 +2674,8 @@ if (savedTab === "year") {
   switchTab("year");
 } else if (savedTab === "planner") {
   switchTab("planner");
+} else if (savedTab === "mock") {
+  switchTab("mock");
 } else {
   renderYearTracker(); // pre-render so it's ready the instant user switches tabs
 }
