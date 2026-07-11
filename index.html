@@ -2050,11 +2050,73 @@ function buildContextSummary() {
   const now = new Date();
   const phase = getPhase(now);
   const phaseNames = { 1: "AFCAT grind", 2: "AFSB prep", 3: "CDS grind", 4: "post-CDS" };
-  return [
-    `Current phase: ${phaseNames[phase] || phase}.`,
-    `Level ${levelFromXP(state.totalXP).level}, streak ${state.streak} days, discipline ${state.discipline}/100.`,
-    `Today's quests done: ${Object.keys(state.todayQuests || {}).length}.`,
-  ].join(" ");
+  const parts = [];
+
+  parts.push(`Current phase: ${phaseNames[phase] || phase}.`);
+  parts.push(`Level ${levelFromXP(state.totalXP).level}, streak ${state.streak} days (best ${state.bestStreak || state.streak}), discipline ${state.discipline}/100.`);
+  parts.push(`Today's quests done: ${Object.keys(state.todayQuests || {}).length}.`);
+
+  // Last 21 days of quest completion history
+  const historyLines = [];
+  for (let i = 20; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const ds = todayStr(d);
+    const entry = state.history[ds];
+    if (entry && entry.total > 0) {
+      historyLines.push(`${ds}: ${entry.done}/${entry.total}`);
+    }
+  }
+  if (historyLines.length) {
+    parts.push(`Last 3 weeks of daily quest completion (done/total): ${historyLines.join(", ")}.`);
+  }
+
+  // Year Tracker summary
+  let ytGreen = 0, ytYellow = 0, ytBlue = 0, ytRed = 0, ytTracked = 0;
+  const ytKeys = Object.keys(yearCells || {});
+  ytKeys.forEach((k) => {
+    ytTracked++;
+    if (yearCells[k] === "green") ytGreen++;
+    else if (yearCells[k] === "yellow") ytYellow++;
+    else if (yearCells[k] === "blue") ytBlue++;
+    else if (yearCells[k] === "red") ytRed++;
+  });
+  if (ytTracked > 0) {
+    parts.push(
+      `Year Tracker (Jul 2026–Jul 2027 study-hours log): ${ytTracked} days logged so far — ${ytGreen} days at 15hrs, ${ytYellow} at 12hrs, ${ytBlue} at 8hrs, ${ytRed} under 8hrs.`
+    );
+  }
+
+  // Recent journal entries (weekly reflections)
+  const journalEntries = Object.entries(state.journal || {})
+    .filter(([, text]) => text && text.trim())
+    .slice(-6);
+  if (journalEntries.length) {
+    const journalText = journalEntries
+      .map(([wk, text]) => `[${wk}] ${text.slice(0, 220)}`)
+      .join(" | ");
+    parts.push(`Recent weekly journal reflections: ${journalText}`);
+  }
+
+  // Unlocked achievements
+  const unlockedBadges = (typeof BADGES !== "undefined" ? BADGES : [])
+    .filter((b) => state.achievements && state.achievements[b.id])
+    .map((b) => b.label);
+  if (unlockedBadges.length) {
+    parts.push(`Achievements unlocked: ${unlockedBadges.join(", ")}.`);
+  }
+
+  // Planner category recency (what's been neglected)
+  try {
+    const log = loadPlannerLog();
+    const doneCats = new Set();
+    Object.values(log).forEach((cats) => (cats || []).forEach((c) => doneCats.add(c)));
+    if (doneCats.size) {
+      parts.push(`Study categories practiced via the planner recently: ${Array.from(doneCats).join(", ")}.`);
+    }
+  } catch (e) {}
+
+  return parts.join(" ");
 }
 
 async function aiChatSend() {
@@ -2075,15 +2137,17 @@ async function aiQuickAction(type) {
       `${buildContextSummary()} Give me an honest read on my week and one concrete thing to fix.`
     );
   } else if (type === "journal") {
-    const entries = Object.values(state.journal || {});
-    const last = entries.length ? (typeof entries[entries.length - 1] === "string" ? entries[entries.length - 1] : entries[entries.length - 1].text) : "";
-    if (!last) {
-      document.getElementById("aiResponseBox").textContent = "No journal entry found yet — add one in the System tab first.";
+    const journalEntries = Object.entries(state.journal || {})
+      .filter(([, text]) => text && text.trim())
+      .slice(-5);
+    if (!journalEntries.length) {
+      document.getElementById("aiResponseBox").textContent = "No journal entries found yet — add one in the System tab first.";
       return;
     }
+    const journalText = journalEntries.map(([wk, text]) => `[Week ${wk}]\n${text}`).join("\n\n");
     await runAIRequest(
-      "You are an SSB prep coach reviewing a candidate's reflective journal entry. Comment on self-awareness, officer-like qualities shown or missing, and give one specific improvement. Keep it under 120 words.",
-      `Journal entry: "${last}"`
+      "You are an SSB prep coach reviewing a candidate's reflective weekly journal entries. Look across all entries given for patterns — recurring struggles, growth, self-awareness, officer-like qualities shown or missing. Give 2-3 specific, honest observations and one concrete improvement. Keep it under 200 words.",
+      `${buildContextSummary()}\n\nJournal entries (most recent last):\n${journalText}`
     );
   } else if (type === "plan") {
     await runAIRequest(
@@ -2094,7 +2158,7 @@ async function aiQuickAction(type) {
     const mode = localStorage.getItem(DIET_MODE_KEY) || "veg";
     await runAIRequest(
       "You give general nutrition guidance (not medical advice) for muscle growth and cognitive performance, for an Indian home-food context.",
-      `Give me a full day's meal plan (${mode === "veg" ? "vegetarian" : "non-vegetarian"}) for muscle and brain growth, timed around a heavy study day. Keep it concise, one line per meal.`
+      `${buildContextSummary()}\n\nGive me a full day's meal plan (${mode === "veg" ? "vegetarian" : "non-vegetarian"}) for muscle and brain growth, timed around a heavy study day. Keep it concise, one line per meal.`
     );
   }
 }
