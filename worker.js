@@ -27,6 +27,12 @@ export default {
       return json({ error: "Server misconfigured: GEMINI_API_KEY secret is not set." }, 500);
     }
 
+    // Strict check: Clean the key. If it is blank, throw a clear error.
+    const cleanKey = env.GEMINI_API_KEY.trim();
+    if (cleanKey.length === 0) {
+      return json({ error: "The Gemini API key was saved as a blank space. Please re-run 'wrangler secret put GEMINI_API_KEY' and paste it carefully." }, 500);
+    }
+
     const contents = messages.map(m => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }]
@@ -45,16 +51,15 @@ export default {
       };
     }
     
-    // Automatically clean the key of any hidden terminal spaces or newlines
-    const cleanKey = env.GEMINI_API_KEY.trim();
-    
     try {
+      // Using Header authentication to prevent URL stripping
       const upstream = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cleanKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "x-goog-api-key": cleanKey
           },
           body: JSON.stringify(geminiPayload),
         }
