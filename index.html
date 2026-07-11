@@ -529,21 +529,27 @@
   <div class="panel">
 
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <div class="section-title" style="margin:0;">12-Hour Daily Program</div>
-      <button onclick="regeneratePlanner()" style="background:#152238;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;">🔄 Regenerate</button>
+      <div class="section-title" style="margin:0;">15-Hour Daily Program</div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="regeneratePlanner()" style="background:#152238;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;">🔄 Rule-Based</button>
+        <button onclick="aiBuildSchedule()" id="aiBuildScheduleBtn" style="background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;">🤖 AI Build</button>
+      </div>
     </div>
     <p style="font-size:10px;color:#5c7699;margin:6px 0 10px;">Auto-built from what you've neglected recently, weighted to your current SSB phase. Gym, meditation, meals, and sleep aren't included here — this is study time only.</p>
 
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
       <label style="font-size:11px;color:#9db6da;">Start time</label>
       <input type="time" id="plannerStartTime" value="06:00" onchange="renderPlanner()" style="background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:5px 8px;font-size:12px;" />
       <div style="flex:1;"></div>
       <div style="font-size:11px;color:#7fc3ff;" id="plannerTotalTime"></div>
     </div>
 
+    <input type="text" id="aiPlanInstructions" placeholder="Tell the AI anything specific — 'weak in comprehension', 'only 6 hrs today', 'swap out GTO for more mocks'..." style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:8px;font-size:12px;margin-bottom:10px;box-sizing:border-box;" />
+
     <div class="xp-bar-bg" style="margin-bottom:12px;"><div class="xp-bar-fill" id="plannerProgressFill" style="width:0%;"></div></div>
 
     <div id="plannerScheduleList"></div>
+    <div id="aiBuildScheduleNote" style="font-size:11px;color:#5c7699;margin-top:8px;"></div>
   </div>
 
   <div class="panel">
@@ -1763,7 +1769,7 @@ function generatePlannerTasks() {
     return { ...t, score: weight + Math.random() * 3 };
   }).sort((a, b) => b.score - a.score);
 
-  const TARGET_MINUTES = 720;
+  const TARGET_MINUTES = 900;
   const picked = [];
   let total = 0;
   for (const t of scored) {
@@ -1772,7 +1778,7 @@ function generatePlannerTasks() {
     total += t.minutes;
   }
 
-  // Scale to fit exactly 720 minutes so the day is realistic
+  // Scale to fit exactly 900 minutes (15 hours) so the day is realistic
   if (total > 0) {
     const factor = TARGET_MINUTES / total;
     picked.forEach(t => { t.minutes = Math.max(15, Math.round((t.minutes * factor) / 5) * 5); });
@@ -1807,6 +1813,74 @@ function buildPlannerSchedule(regenerate) {
 function regeneratePlanner() {
   buildPlannerSchedule(true);
   renderPlanner();
+}
+
+async function aiBuildSchedule(targetId) {
+  const btn = document.getElementById("aiBuildScheduleBtn");
+  const noteEl = document.getElementById(targetId || "aiBuildScheduleNote");
+  const copyBtn = document.getElementById("aiCopyBtn");
+  if (copyBtn) copyBtn.style.display = "none";
+
+  const instructions = (document.getElementById("aiPlanInstructions").value || "").trim();
+  const startTime = document.getElementById("plannerStartTime").value || "06:00";
+
+  if (btn) { btn.disabled = true; btn.textContent = "🤖 Building…"; }
+  noteEl.textContent = "Thinking…";
+
+  const system =
+    "You design realistic 15-hour daily study schedules for SSB (Indian defence services) aspirants. " +
+    "Exclude gym, meditation, meals, and sleep — study only. " +
+    'Respond with ONLY a valid JSON array, no markdown formatting, no code fences, no explanation before or after. ' +
+    'Each item must look like {"label": "short task name", "minutes": integer}. ' +
+    "Minutes should be multiples of 5, each block between 20 and 120 minutes. " +
+    "Total should be close to 900 minutes (15 hours) unless the instructions ask for a shorter day.";
+  const prompt =
+    `${buildContextSummary()}\n\nBuild today's study schedule starting at ${startTime}.` +
+    (instructions ? ` Additional instructions: ${instructions}` : "");
+
+  const result = await callAI(system, prompt);
+
+  if (btn) { btn.disabled = false; btn.textContent = "🤖 AI Build"; }
+
+  if (result.error) {
+    noteEl.textContent = "⚠ " + result.error;
+    return;
+  }
+
+  let tasks;
+  try {
+    let cleaned = result.text.trim();
+    cleaned = cleaned.replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/```\s*$/, "");
+    tasks = JSON.parse(cleaned);
+    if (!Array.isArray(tasks)) throw new Error("Response wasn't a list");
+  } catch (e) {
+    noteEl.textContent = "⚠ Couldn't turn the AI's reply into tasks. Try again, or tap 🔄 Rule-Based instead.";
+    return;
+  }
+
+  const cleanTasks = tasks
+    .filter((t) => t && typeof t.label === "string" && t.label.trim() && Number(t.minutes) > 0)
+    .slice(0, 20)
+    .map((t, i) => ({
+      id: "ai_" + i,
+      cat: "ai",
+      label: t.label.trim(),
+      minutes: Math.max(10, Math.round(Number(t.minutes) / 5) * 5),
+    }));
+
+  if (!cleanTasks.length) {
+    noteEl.textContent = "⚠ The AI didn't return any usable tasks. Try again with clearer instructions.";
+    return;
+  }
+
+  const cacheKey = "solo-leveling-planner-cache-" + todayStr(new Date());
+  try { localStorage.setItem(cacheKey, JSON.stringify(cleanTasks)); } catch (e) {}
+
+  buildPlannerSchedule(false);
+  renderPlanner();
+
+  const totalMin = cleanTasks.reduce((s, t) => s + t.minutes, 0);
+  noteEl.textContent = `✅ AI built ${cleanTasks.length} tasks (${Math.floor(totalMin / 60)}h ${totalMin % 60}m) into your 15-Hour Daily Program above — check them off as you go. Any custom tasks you'd added stay attached too.`;
 }
 
 function addCustomPlannerTask() {
@@ -1923,7 +1997,7 @@ function renderPlannerCoach() {
   }
 
   if (state.discipline < 50) {
-    parts.push(`Discipline is at ${state.discipline}/100. The 12-hour plan below is intentionally realistic, not punishing — finishing 70% of it beats abandoning 100% of it.`);
+    parts.push(`Discipline is at ${state.discipline}/100. The 15-hour plan below is intentionally realistic, not punishing — finishing 70% of it beats abandoning 100% of it.`);
   }
 
   const journalEntries = Object.values(state.journal || {});
@@ -2150,10 +2224,7 @@ async function aiQuickAction(type) {
       `${buildContextSummary()}\n\nJournal entries (most recent last):\n${journalText}`
     );
   } else if (type === "plan") {
-    await runAIRequest(
-      "You design realistic 12-hour daily study schedules for SSB (Indian defence services) aspirants. Exclude gym, meditation, meals, and sleep — study only. Respond with a clear time-blocked list, one line per block, format: 'HH:MM AM/PM – HH:MM AM/PM: Task (why, 1 short clause)'. Keep total to 12 hours.",
-      `${buildContextSummary()} Build today's study schedule starting at ${document.getElementById("plannerStartTime").value || "06:00"}.`
-    );
+    await aiBuildSchedule("aiResponseBox");
   } else if (type === "diet") {
     const mode = localStorage.getItem(DIET_MODE_KEY) || "veg";
     await runAIRequest(
