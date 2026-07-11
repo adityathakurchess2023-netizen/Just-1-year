@@ -1,0 +1,25 @@
+{
+  "name": "THE SYSTEM — Path to Commission",
+  "short_name": "THE SYSTEM",
+  "description": "SSB prep tracker: quests, XP, study timer, and a one-year study log.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#030509",
+  "theme_color": "#0a1220",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

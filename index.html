@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>THE SYSTEM — Path to Commission</title>
+<meta name="description" content="SSB prep tracker: quests, XP, study timer, and a one-year study log." />
+<meta name="theme-color" content="#0a1220" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="THE SYSTEM" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+  :root {
+    --accent: #3b82f6;
+    --accent-light: #7fc3ff;
+    --border: #2a4a7a;
+    --title-glow: rgba(100,180,255,0.7);
+    --panel-glow: rgba(60,140,255,0.15);
+    --insight-bg: rgba(59,130,246,0.08);
+    --bg1: #0a1220;
+    --bg2: #030509;
+  }
+  html[data-theme="crimson"] {
+    --accent: #e0483f; --accent-light: #ff9d8a; --border: #7a2a2a;
+    --title-glow: rgba(255,120,90,0.7); --panel-glow: rgba(224,72,63,0.15);
+    --insight-bg: rgba(224,72,63,0.08); --bg1: #200a0a; --bg2: #090303;
+  }
+  html[data-theme="emerald"] {
+    --accent: #2fae54; --accent-light: #8be6a8; --border: #1f5c38;
+    --title-glow: rgba(80,220,140,0.7); --panel-glow: rgba(47,174,84,0.15);
+    --insight-bg: rgba(47,174,84,0.08); --bg1: #071a10; --bg2: #030905;
+  }
+  html[data-theme="violet"] {
+    --accent: #8b5cf6; --accent-light: #c9b3ff; --border: #4a2a7a;
+    --title-glow: rgba(180,130,255,0.7); --panel-glow: rgba(139,92,246,0.15);
+    --insight-bg: rgba(139,92,246,0.08); --bg1: #150a20; --bg2: #060309;
+  }
+  html[data-theme="mono"] {
+    --accent: #9ca3af; --accent-light: #e5e7eb; --border: #3a3d44;
+    --title-glow: rgba(220,220,220,0.5); --panel-glow: rgba(200,200,200,0.1);
+    --insight-bg: rgba(200,200,200,0.07); --bg1: #14161a; --bg2: #050608;
+  }
+
+  #systemView, #yearView {
+    width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: stretch;
+  }
+
+  .tab-nav {
+    display: flex; gap: 8px; width: 100%; max-width: 560px; margin-bottom: 14px;
+  }
+  .tab-btn {
+    flex: 1;
+    background: #0d1a2e;
+    border: 1px solid var(--border, #2a4a7a);
+    color: #7c93b8;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    padding: 10px 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .tab-btn.active {
+    background: linear-gradient(180deg, rgba(59,130,246,0.25), rgba(59,130,246,0.08));
+    color: #eaf4ff;
+    border-color: var(--accent, #3b82f6);
+    box-shadow: 0 0 12px var(--panel-glow, rgba(60,140,255,0.15));
+  }
+
+  .theme-swatch {
+    width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+    border: 2px solid rgba(255,255,255,0.15);
+    box-shadow: 0 0 6px var(--panel-glow);
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    padding: 0;
+  }
+  .theme-swatch:hover { transform: scale(1.12); }
+  .theme-swatch.active { border-color: #fff; box-shadow: 0 0 10px var(--title-glow); }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at 50% 0%, #0a1220 0%, #030509 60%, #000 100%);
+    color: #cfe3ff;
+    font-family: 'Rajdhani', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 12px 60px;
+  }
+
+  .panel {
+    width: 100%;
+    max-width: 560px;
+    background: linear-gradient(180deg, rgba(15,25,45,0.85), rgba(6,10,20,0.9));
+    border: 1px solid #2a4a7a;
+    border-radius: 10px;
+    box-shadow: 0 0 24px rgba(60,140,255,0.15), inset 0 0 40px rgba(30,80,180,0.06);
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .panel::before {
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: 10px;
+    border: 1px solid rgba(100,180,255,0.15);
+    pointer-events: none;
+  }
+
+  .system-title {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 22px;
+    letter-spacing: 0.35em;
+    text-align: center;
+    color: #7fc3ff;
+    text-shadow: 0 0 12px rgba(100,180,255,0.7), 0 0 2px #fff;
+    margin: 0 0 2px;
+  }
+  .system-sub {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: #6c86ad;
+    margin-bottom: 14px;
+  }
+
+  .player-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1px solid #223c60; padding-bottom: 10px; margin-bottom: 12px;
+  }
+  .player-name { font-size: 17px; font-weight: 700; color: #eaf4ff; }
+  .player-title { font-size: 11px; color: #7fc3ff; letter-spacing: 0.05em; }
+  .rank-badge {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px; font-weight: 900;
+    color: #ffd166;
+    text-shadow: 0 0 10px rgba(255,209,102,0.6);
+  }
+
+  .xp-row { margin-bottom: 14px; }
+  .xp-label { display:flex; justify-content: space-between; font-size: 11px; color:#9db6da; margin-bottom:4px; }
+  .xp-bar-bg { width: 100%; height: 10px; background: #0d1a2e; border-radius: 6px; overflow: hidden; border: 1px solid #1e3a5f; }
+  .xp-bar-fill { height: 100%; background: linear-gradient(90deg,#3b82f6,#7fc3ff); box-shadow: 0 0 8px #3b82f6; transition: width .4s ease; }
+
+  .stat-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 6px; }
+  .stat-box { background:#0c1626; border:1px solid #1e3552; border-radius:6px; padding:8px 10px; }
+  .stat-name { font-size: 11px; color:#9db6da; display:flex; justify-content:space-between; }
+  .stat-val { font-family:'Orbitron',sans-serif; font-size:15px; color:#eaf4ff; }
+  .stat-bar-bg { width:100%; height:5px; background:#0d1a2e; border-radius:4px; margin-top:4px; overflow:hidden; }
+  .stat-bar-fill { height:100%; border-radius:4px; }
+
+  .section-title {
+    font-family:'Orbitron', sans-serif;
+    font-size: 12px; letter-spacing:0.15em; color:#7fc3ff;
+    margin: 6px 0 10px; text-transform: uppercase;
+  }
+
+  .phase-banner {
+    font-size: 12px; color:#ffd166; background: rgba(255,209,102,0.06);
+    border:1px solid rgba(255,209,102,0.3); border-radius:6px; padding:8px 10px; margin-bottom:14px;
+    line-height:1.5;
+  }
+
+  .quest {
+    display:flex; align-items:flex-start; gap:10px;
+    padding:8px 6px; border-bottom: 1px dashed #1c3050;
+    cursor:pointer; user-select:none;
+  }
+  .quest:last-child{ border-bottom:none; }
+  .quest input { margin-top:4px; width:16px; height:16px; accent-color:#3b82f6; cursor:pointer; }
+  .quest-label { font-size: 14px; color:#dbe9ff; }
+  .quest-label.done { color:#5c7699; text-decoration: line-through; }
+  .quest-tag {
+    font-size: 9px; letter-spacing:0.05em; color:#7fc3ff;
+    border:1px solid #2a4a7a; border-radius:4px; padding:1px 5px; margin-left:6px;
+  }
+  .quest-xp { font-size: 10px; color:#5c7699; margin-left:auto; white-space:nowrap; }
+
+  .boss-btn {
+    width:100%; margin-top: 6px;
+    background: linear-gradient(90deg,#7a1f2b,#a3273a);
+    border:1px solid #d84a5f; color:#ffe3e6; font-family:'Orbitron',sans-serif;
+    font-size:12px; letter-spacing:0.1em; padding:10px; border-radius:6px; cursor:pointer;
+  }
+  .boss-btn:disabled { opacity:0.4; cursor:default; }
+
+  .streak-row { display:flex; justify-content:space-around; text-align:center; margin-top:4px; }
+  .streak-num { font-family:'Orbitron',sans-serif; font-size:20px; color:#ffd166; }
+  .streak-label { font-size:10px; color:#9db6da; }
+
+  .insight {
+    font-size: 12.5px; line-height:1.6; color:#cfe3ff;
+    background: rgba(59,130,246,0.08); border-left:3px solid #3b82f6;
+    padding: 10px 12px; border-radius: 4px;
+  }
+
+  .reset-link {
+    text-align:center; font-size:10px; color:#5c7699; margin-top:10px; cursor:pointer; text-decoration:underline;
+    background:none; border:none; font-family:inherit; padding:0;
+  }
+
+  .modal-bg {
+    position:fixed; inset:0; background:rgba(0,0,0,0.7); display:none;
+    align-items:center; justify-content:center; z-index:50;
+  }
+  .modal-bg.open { display:flex; }
+  .modal {
+    background:#0c1626; border:1px solid #2a4a7a; border-radius:8px; padding:20px;
+    width: 90%; max-width: 340px; text-align:center;
+  }
+  .modal h3 { font-family:'Orbitron',sans-serif; color:#ffd166; font-size:14px; margin-top:0; }
+  .modal input {
+    width:100%; padding:8px; margin: 10px 0; background:#0d1a2e; border:1px solid #2a4a7a;
+    color:#eaf4ff; border-radius:6px; font-size:14px; text-align:center;
+  }
+  .modal button {
+    background:#3b82f6; border:none; color:#fff; padding:8px 16px; border-radius:6px;
+    font-family:'Orbitron',sans-serif; font-size:11px; letter-spacing:0.05em; cursor:pointer; margin: 0 4px;
+  }
+  .modal button.secondary { background:#22314a; }
+</style>
+</head>
+<body>
+
+<div class="panel" style="padding:10px 14px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+    <div style="font-size:10px;letter-spacing:0.1em;color:#6c86ad;">THEME</div>
+    <div id="themeSwitcher" style="display:flex;gap:8px;"></div>
+  </div>
+</div>
+
+<div class="tab-nav">
+  <button class="tab-btn active" id="tabBtnSystem" onclick="switchTab('system')">⚔ SYSTEM</button>
+  <button class="tab-btn" id="tabBtnYear" onclick="switchTab('year')">◎ YEAR TRACKER</button>
+</div>
+
+<div id="systemView">
+
+<div class="panel">
+  <div class="system-title">THE SYSTEM</div>
+  <div class="system-sub">[ PATH TO COMMISSION · JUL 2026 – JUL 2027 ]</div>
+
+  <div class="player-row">
+    <div>
+      <div class="player-name" id="playerName">Aditya</div>
+      <div class="player-title" id="playerTitle">E-Rank Cadet</div>
+    </div>
+    <div class="rank-badge" id="rankBadge">E</div>
+  </div>
+
+  <div class="xp-row">
+    <div class="xp-label"><span id="levelLabel">Level 1</span><span id="xpLabel">0 / 100 XP</span></div>
+    <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="xp-row">
+    <div class="xp-label"><span>Discipline</span><span id="disciplineLabel">100 / 100</span></div>
+    <div class="xp-bar-bg"><div class="xp-bar-fill" id="disciplineBarFill" style="width:100%;background:linear-gradient(90deg,#a3273a,#ffb199);box-shadow:0 0 8px #a3273a;"></div></div>
+  </div>
+
+  <div class="stat-grid" id="statGrid"></div>
+
+  <div class="streak-row">
+    <div><div class="streak-num" id="streakNum">0</div><div class="streak-label">day streak</div></div>
+    <div><div class="streak-num" id="bestStreakNum">0</div><div class="streak-label">best streak</div></div>
+    <div><div class="streak-num" id="totalDaysNum">0</div><div class="streak-label">days logged</div></div>
+  </div>
+</div>
+
+<div class="panel">
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div class="section-title" style="margin:0;">Study Timer</div>
+    <button onclick="toggleTimerCustomize()" style="background:none;border:1px solid #2a4a7a;color:#7fc3ff;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer;">⚙ Customize</button>
+  </div>
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px;">
+    <div id="timerDisplay" style="font-family:'Orbitron',sans-serif; font-size:32px; color:#7fc3ff; letter-spacing:0.05em;">25:00</div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+      <button id="workMinBtn" onclick="timerSetMode('work')" style="background:#152238;border:1px solid #2a4a7a;color:#cfe3ff;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;">25 min</button>
+      <button id="breakMinBtn" onclick="timerSetMode('break')" style="background:#152238;border:1px solid #2a4a7a;color:#cfe3ff;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;">5 min</button>
+    </div>
+  </div>
+
+  <div id="timerCustomizeRow" style="display:none; gap:8px; margin-top:10px; align-items:end; flex-wrap:wrap; background:#0d1a2e; border:1px solid #2a4a7a; border-radius:6px; padding:10px;">
+    <div style="flex:1;min-width:90px;">
+      <div style="font-size:10px;color:#7c93b8;margin-bottom:4px;">Work (min)</div>
+      <input type="number" id="customWorkInput" min="1" max="180" style="width:100%;background:#0a1220;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:6px;font-size:13px;" />
+    </div>
+    <div style="flex:1;min-width:90px;">
+      <div style="font-size:10px;color:#7c93b8;margin-bottom:4px;">Break (min)</div>
+      <input type="number" id="customBreakInput" min="1" max="60" style="width:100%;background:#0a1220;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:6px;font-size:13px;" />
+    </div>
+    <button onclick="saveTimerCustomize()" style="background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:7px 12px;font-family:'Orbitron',sans-serif;font-size:10px;cursor:pointer;">Save</button>
+  </div>
+
+  <div style="display:flex; gap:8px; margin-top:10px;">
+    <button id="timerStartBtn" onclick="timerToggle()" style="flex:1;background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:9px;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:0.05em;cursor:pointer;">START</button>
+    <button onclick="timerReset()" style="flex:1;background:#22314a;border:none;color:#cfe3ff;border-radius:6px;padding:9px;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:0.05em;cursor:pointer;">RESET</button>
+  </div>
+  <div id="timerStatus" style="font-size:11px;color:#5c7699;margin-top:8px;text-align:center;"></div>
+</div>
+
+<div class="panel">
+  <div class="phase-banner" id="phaseBanner"></div>
+  <div class="section-title">Daily Quests</div>
+  <div id="questList"></div>
+  <button class="boss-btn" id="bossBtn">⚔ Weekly Boss Battle — Log a Mock Test</button>
+</div>
+
+<div class="panel">
+  <div class="section-title">Penalty Watch</div>
+  <div class="insight" id="penaltyBox" style="border-left-color:#a3273a;background:rgba(163,39,58,0.08);"></div>
+</div>
+
+<div class="panel">
+  <div class="section-title">System Insight</div>
+  <div class="insight" id="insightBox"></div>
+</div>
+
+<div class="panel">
+  <div class="section-title">Weekly Summary</div>
+  <div id="weeklySummaryGrid" style="display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between;margin-bottom:10px;">
+    <div style="text-align:center;flex:1;min-width:70px;">
+      <div id="weekCompletionPct" style="font-family:'Orbitron',sans-serif;font-size:20px;color:#7fc3ff;">0%</div>
+      <div style="font-size:10px;color:#9db6da;">avg completion</div>
+    </div>
+    <div style="text-align:center;flex:1;min-width:70px;">
+      <div id="weekFullDays" style="font-family:'Orbitron',sans-serif;font-size:20px;color:#3fae54;">0/7</div>
+      <div style="font-size:10px;color:#9db6da;">full days</div>
+    </div>
+    <div style="text-align:center;flex:1;min-width:70px;">
+      <div id="weekStreak" style="font-family:'Orbitron',sans-serif;font-size:20px;color:#ffd166;">0</div>
+      <div style="font-size:10px;color:#9db6da;">current streak</div>
+    </div>
+    <div style="text-align:center;flex:1;min-width:70px;">
+      <div id="weekDiscipline" style="font-family:'Orbitron',sans-serif;font-size:20px;color:#e0483f;">100</div>
+      <div style="font-size:10px;color:#9db6da;">discipline</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:4px;margin-bottom:10px;" id="weekDayStrip"></div>
+  <div class="insight" id="weeklySummaryText"></div>
+</div>
+
+<div class="panel">
+  <div class="section-title">Reward Shop</div>
+  <div class="xp-label" style="margin-bottom:10px;">
+    <span>Essence</span>
+    <span id="essenceLabel" style="color:#ffd166;font-family:'Orbitron',sans-serif;">0</span>
+  </div>
+  <div id="rewardList"></div>
+
+  <div style="font-size:10px;color:#5c7699;margin:12px 0 6px;text-transform:uppercase;letter-spacing:0.1em;">Quick add — tap what fits</div>
+  <div id="presetGrid" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+
+  <div id="customToggleRow" style="margin-top:10px;">
+    <span id="customToggleLink" style="font-size:10px;color:#5c7699;text-decoration:underline;cursor:pointer;">+ add something not listed</span>
+  </div>
+  <div id="customAddRow" style="display:none; gap:6px; margin-top:8px;">
+    <input id="newRewardName" placeholder="Reward name" style="flex:2; padding:7px; background:#0d1a2e; border:1px solid #2a4a7a; color:#eaf4ff; border-radius:6px; font-size:12px;" />
+    <input id="newRewardCost" type="number" placeholder="Cost" style="flex:1; padding:7px; background:#0d1a2e; border:1px solid #2a4a7a; color:#eaf4ff; border-radius:6px; font-size:12px;" />
+    <button onclick="addReward()" style="background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:0 12px;font-size:11px;font-family:'Orbitron',sans-serif;cursor:pointer;">Add</button>
+  </div>
+
+  <p style="font-size:10px;color:#5c7699;margin-bottom:0;margin-top:10px;">Earn ~1 essence per 3 XP. Tap a preset to add it to your shop below, then redeem when you can afford it.</p>
+</div>
+
+<div class="panel">
+  <div class="section-title">Achievements</div>
+  <div class="stat-grid" id="achievementGrid"></div>
+</div>
+
+<div class="panel">
+  <div class="section-title">Progress Heatmap</div>
+  <div id="heatmapScroll" style="overflow-x:auto; padding-bottom:6px;">
+    <div id="heatmapMonths" style="display:flex; gap:2px; margin-bottom:3px; font-size:9px; color:#5c7699;"></div>
+    <div id="heatmapGrid" style="display:flex; gap:2px;"></div>
+  </div>
+  <div style="display:flex; align-items:center; gap:6px; margin-top:8px; font-size:9px; color:#5c7699;">
+    <span>Less</span>
+    <span style="width:9px;height:9px;background:#7a2a2a;border-radius:2px;display:inline-block;"></span>
+    <span style="width:9px;height:9px;background:#a37a1f;border-radius:2px;display:inline-block;"></span>
+    <span style="width:9px;height:9px;background:#7a9a2f;border-radius:2px;display:inline-block;"></span>
+    <span style="width:9px;height:9px;background:#2fae54;border-radius:2px;display:inline-block;"></span>
+    <span>More</span>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="section-title">Weekly Reflection</div>
+  <p style="font-size:10px;color:#5c7699;margin-top:-6px;">A few honest lines each week — what worked, what didn't, what to adjust.</p>
+  <textarea id="journalInput" rows="4" placeholder="This week I noticed..." style="width:100%;background:#0d1a2e;border:1px solid #2a4a7a;color:#eaf4ff;border-radius:6px;padding:8px;font-family:'Rajdhani',sans-serif;font-size:13px;resize:vertical;"></textarea>
+  <div id="pastJournalList" style="margin-top:10px;"></div>
+</div>
+
+<div class="panel">
+  <div class="section-title">Backup</div>
+  <p style="font-size:10px;color:#5c7699;margin-top:-6px;">Your data lives only in this browser. Export it now and then so a cache clear can't wipe your progress.</p>
+  <div style="display:flex; gap:8px;">
+    <button onclick="exportData()" style="flex:1;background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:9px;font-family:'Orbitron',sans-serif;font-size:11px;cursor:pointer;">Export Backup</button>
+    <button onclick="document.getElementById('importFileInput').click()" style="flex:1;background:#22314a;border:none;color:#cfe3ff;border-radius:6px;padding:9px;font-family:'Orbitron',sans-serif;font-size:11px;cursor:pointer;">Import Backup</button>
+  </div>
+  <input type="file" id="importFileInput" accept="application/json" style="display:none;" />
+</div>
+
+<div class="reset-link" id="resetLink">reset all progress</div>
+
+</div>
+<!-- /systemView -->
+
+<div id="yearView" style="display:none;width:100%;max-width:560px;">
+
+  <div class="panel">
+    <h1 style="font-size:20px;font-weight:800;letter-spacing:0.06em;margin:0 0 4px;text-align:center;font-family:'Orbitron',sans-serif;color:#7fc3ff;text-shadow:0 0 10px rgba(100,180,255,0.5);">JUST ONE YEAR</h1>
+    <div style="font-size:11px;color:#6c86ad;margin-bottom:8px;text-align:center;">Jul 8, 2026 → Jul 8, 2027</div>
+    <div style="font-size:11px;color:#6c86ad;text-align:center;max-width:340px;line-height:1.6;margin:0 auto 14px;">
+      Tap a day to cycle through: <span style="color:#c0463c">red</span> = didn't reach 8 hrs ·
+      <span style="color:#3b82f6">blue</span> = 8 hrs ·
+      <span style="color:#eab308">yellow</span> = 12 hrs ·
+      <span style="color:#3fae54">green</span> = 15 hrs
+    </div>
+
+    <div style="width:100%;">
+      <svg id="yearSvg" viewBox="0 0 520 540" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block;"></svg>
+    </div>
+
+    <div style="display:flex;gap:16px;margin-top:14px;font-size:11px;color:#9db6da;flex-wrap:wrap;justify-content:center;">
+      <div style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:2px;display:inline-block;background:#c0463c;"></span>&lt;8 hrs</div>
+      <div style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:2px;display:inline-block;background:#3b82f6;"></span>8 hrs</div>
+      <div style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:2px;display:inline-block;background:#eab308;"></span>12 hrs</div>
+      <div style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:2px;display:inline-block;background:#3fae54;"></span>15 hrs</div>
+      <div style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:2px;display:inline-block;background:#23262b;border:1px solid #2a4a7a;"></span>Untracked</div>
+    </div>
+
+    <div style="display:flex;gap:20px;margin-top:18px;text-align:center;justify-content:center;flex-wrap:wrap;">
+      <div><div style="font-size:20px;font-weight:700;color:#c0463c;" id="statRed">0</div><div style="font-size:10px;color:#6c86ad;">&lt;8hr days</div></div>
+      <div><div style="font-size:20px;font-weight:700;color:#3b82f6;" id="statBlue">0</div><div style="font-size:10px;color:#6c86ad;">8hr days</div></div>
+      <div><div style="font-size:20px;font-weight:700;color:#eab308;" id="statYellow">0</div><div style="font-size:10px;color:#6c86ad;">12hr days</div></div>
+      <div><div style="font-size:20px;font-weight:700;color:#3fae54;" id="statGreen">0</div><div style="font-size:10px;color:#6c86ad;">15hr days</div></div>
+      <div><div style="font-size:20px;font-weight:700;color:#eaf4ff;" id="statLeft">365</div><div style="font-size:10px;color:#6c86ad;">days left to mark</div></div>
+    </div>
+
+    <p style="font-size:10px;color:#5c7699;margin-top:16px;text-align:center;">Your data is saved automatically in this browser on this device.</p>
+
+    <div style="text-align:center;">
+      <button class="reset-link" id="yearResetLink" style="display:inline-block;">reset year tracker data</button>
+    </div>
+  </div>
+
+</div>
+<!-- /yearView -->
+
+<div class="modal-bg" id="bossModal">
+  <div class="modal">
+    <h3>⚔ BOSS BATTLE</h3>
+    <p style="font-size:12px;color:#9db6da;margin-top:-6px;">Enter your mock test score (%)</p>
+    <input type="number" id="bossScoreInput" min="0" max="100" placeholder="e.g. 68" />
+    <div>
+      <button onclick="submitBoss()">Submit</button>
+      <button class="secondary" onclick="closeBossModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = "solo-leveling-system-v1";
+const THEME_KEY = "solo-leveling-system-theme";
+const TAB_KEY = "solo-leveling-system-tab";
+
+const THEMES = [
+  { id: "blue",    label: "Blue",    swatch: "#3b82f6" },
+  { id: "crimson", label: "Crimson", swatch: "#e0483f" },
+  { id: "emerald", label: "Emerald", swatch: "#2fae54" },
+  { id: "violet",  label: "Violet",  swatch: "#8b5cf6" },
+  { id: "mono",    label: "Mono",    swatch: "#9ca3af" },
+];
+
+function applyTheme(themeId) {
+  if (themeId === "blue") {
+    document.documentElement.removeAttribute("data-theme");
+  } else {
+    document.documentElement.setAttribute("data-theme", themeId);
+  }
+  localStorage.setItem(THEME_KEY, themeId);
+  document.querySelectorAll(".theme-swatch").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.theme === themeId);
+  });
+}
+
+function initThemeSwitcher() {
+  const container = document.getElementById("themeSwitcher");
+  container.innerHTML = THEMES.map(t =>
+    `<button class="theme-swatch" data-theme="${t.id}" title="${t.label}" style="background:${t.swatch};" onclick="applyTheme('${t.id}')"></button>`
+  ).join("");
+  const saved = localStorage.getItem(THEME_KEY) || "blue";
+  applyTheme(saved);
+}
+initThemeSwitcher();
+
+function switchTab(tab) {
+  const sys = document.getElementById("systemView");
+  const yr = document.getElementById("yearView");
+  const btnSys = document.getElementById("tabBtnSystem");
+  const btnYr = document.getElementById("tabBtnYear");
+  if (tab === "year") {
+    sys.style.display = "none";
+    yr.style.display = "flex";
+    btnSys.classList.remove("active");
+    btnYr.classList.add("active");
+    renderYearTracker();
+  } else {
+    sys.style.display = "flex";
+    yr.style.display = "none";
+    btnYr.classList.remove("active");
+    btnSys.classList.add("active");
+  }
+  localStorage.setItem(TAB_KEY, tab);
+}
+
+const MILESTONES = {
+  afcat: new Date(2026, 7, 8),
+  afsbEnd: new Date(2026, 7, 24),
+  cds: new Date(2026, 8, 13),
+};
+
+const CORE_QUESTS = [
+  { id: "wake",     label: "Wake up by 4:00 AM",            stat: "WIS", xp: 8 },
+  { id: "workout",  label: "Strength / physical workout",   stat: "STR", xp: 12 },
+  { id: "run",      label: "Run / cardio session",          stat: "VIT", xp: 12 },
+  { id: "meditate", label: "Meditation (10–15 min)",         stat: "WIS", xp: 8 },
+  { id: "sleep",    label: "Lights out by 10:00 PM",        stat: "VIT", xp: 6 },
+];
+
+const PHASE_QUESTS = {
+  1: [
+    { id: "deepwork", label: "2 deep-work study blocks (90 min each)", stat: "INT", xp: 15 },
+    { id: "mock",     label: "AFCAT practice set / sectional",         stat: "INT", xp: 15 },
+    { id: "ca",       label: "Current affairs reading + notes",        stat: "WIS", xp: 10 },
+    { id: "reasoning",label: "English / Reasoning practice",           stat: "INT", xp: 10 },
+  ],
+  2: [
+    { id: "lecturette", label: "Lecturette practice (1 topic, timed)", stat: "CHA", xp: 15 },
+    { id: "olq",        label: "OLQ journal — reflect on a decision made today", stat: "CHA", xp: 10 },
+    { id: "ppdt",       label: "PPDT / TAT story practice",            stat: "INT", xp: 12 },
+    { id: "mirror",     label: "Mirror interview / self Q&A",          stat: "CHA", xp: 10 },
+    { id: "gto",        label: "Visualize a GTO task & plan response", stat: "CHA", xp: 8 },
+  ],
+  3: [
+    { id: "deepwork2", label: "2 deep-work study blocks (CDS syllabus)", stat: "INT", xp: 15 },
+    { id: "mock2",     label: "CDS mock test / sectional",              stat: "INT", xp: 15 },
+    { id: "maths",     label: "Maths / English practice set",           stat: "INT", xp: 10 },
+    { id: "ca2",       label: "Current affairs + GK notes",             stat: "WIS", xp: 10 },
+  ],
+  4: [
+    { id: "python",  label: "Python practice session",              stat: "INT", xp: 15 },
+    { id: "content", label: "Finance content work (script/edit/post)", stat: "CHA", xp: 12 },
+    { id: "reading", label: "Finance / markets reading",             stat: "WIS", xp: 8 },
+    { id: "build",   label: "Portfolio / project build time",        stat: "INT", xp: 12 },
+  ],
+};
+
+const STAT_COLORS = { STR: "#f87171", VIT: "#34d399", INT: "#60a5fa", WIS: "#c084fc", CHA: "#fbbf24" };
+const STAT_NAMES  = { STR: "STR — Strength", VIT: "VIT — Vitality", INT: "INT — Intellect", WIS: "WIS — Mental Fortitude", CHA: "CHA — Command Presence" };
+
+const RANKS = [
+  { max: 9,  code: "E", title: "E-Rank Cadet" },
+  { max: 19, code: "D", title: "D-Rank Cadet" },
+  { max: 29, code: "C", title: "C-Rank Officer Trainee" },
+  { max: 39, code: "B", title: "B-Rank Officer Trainee" },
+  { max: 49, code: "A", title: "A-Rank Probationary Officer" },
+  { max: Infinity, code: "S", title: "S-Rank Commissioned Officer" },
+];
+
+function todayStr(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+function getPhase(date) {
+  if (date < MILESTONES.afcat) return 1;
+  if (date < MILESTONES.afsbEnd) return 2;
+  if (date < MILESTONES.cds) return 3;
+  return 4;
+}
+
+function getPhaseInfo(phase, now) {
+  const info = {
+    1: { name: "PHASE 1 — AFCAT GRIND", target: MILESTONES.afcat, label: "AFCAT" },
+    2: { name: "PHASE 2 — AFSB PREP", target: MILESTONES.afsbEnd, label: "AFSB window ends" },
+    3: { name: "PHASE 3 — CDS GRIND", target: MILESTONES.cds, label: "CDS" },
+    4: { name: "PHASE 4 — PYTHON + FINANCE BUILD", target: null, label: null },
+  }[phase];
+  if (info.target) {
+    const days = Math.ceil((info.target - now) / 86400000);
+    info.daysLeft = days;
+  }
+  return info;
+}
+
+function weekId(date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+  const week1 = new Date(d.getFullYear(), 0, 4);
+  return d.getFullYear() + "-W" + (1 + Math.round(((d - week1) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7));
+}
+
+function xpForLevel(level) {
+  return 100 + (level - 1) * 25;
+}
+
+function levelFromXP(totalXP) {
+  let level = 1, remaining = totalXP;
+  while (remaining >= xpForLevel(level)) {
+    remaining -= xpForLevel(level);
+    level++;
+  }
+  return { level, into: remaining, needed: xpForLevel(level) };
+}
+
+function rankFromLevel(level) {
+  return RANKS.find(r => level <= r.max);
+}
+
+function defaultState() {
+  return {
+    totalXP: 0,
+    stats: { STR: 10, VIT: 10, INT: 10, WIS: 10, CHA: 10 },
+    streak: 0,
+    bestStreak: 0,
+    totalDays: 0,
+    lastDate: null,
+    todayQuests: {},
+    bossWeek: null,
+    bossCount: 0,
+    discipline: 100,
+    statLastDone: { STR: null, VIT: null, INT: null, WIS: null, CHA: null },
+    lastPenaltyNote: null,
+    essence: 0,
+    rewards: [],
+    achievements: {},
+    history: {},
+    journal: {},
+  };
+}
+
+const PRESET_REWARDS = [
+  { name: "15 min music / scroll break", cost: 20 },
+  { name: "Short walk outside, just for fun", cost: 20 },
+  { name: "Call / text a friend", cost: 25 },
+  { name: "30 min gaming session", cost: 40 },
+  { name: "Watch one show episode", cost: 60 },
+  { name: "Sleep in an extra 30 min", cost: 60 },
+  { name: "Order/buy a small treat", cost: 70 },
+  { name: "Buy something small you've wanted", cost: 120 },
+  { name: "Half-day off, guilt-free", cost: 250 },
+  { name: "Full day off, guilt-free", cost: 500 },
+];
+
+const BADGES = [
+  { id: "streak_3",  label: "3-Day Streak",        check: s => s.bestStreak >= 3 },
+  { id: "streak_7",  label: "7-Day Streak",        check: s => s.bestStreak >= 7 },
+  { id: "streak_14", label: "14-Day Streak",       check: s => s.bestStreak >= 14 },
+  { id: "streak_30", label: "30-Day Streak",       check: s => s.bestStreak >= 30 },
+  { id: "rank_d",    label: "Reached D-Rank",      check: s => levelFromXP(s.totalXP).level >= 10 },
+  { id: "rank_c",    label: "Reached C-Rank",      check: s => levelFromXP(s.totalXP).level >= 20 },
+  { id: "rank_b",    label: "Reached B-Rank",      check: s => levelFromXP(s.totalXP).level >= 30 },
+  { id: "rank_a",    label: "Reached A-Rank",      check: s => levelFromXP(s.totalXP).level >= 40 },
+  { id: "rank_s",    label: "Reached S-Rank",      check: s => levelFromXP(s.totalXP).level >= 50 },
+  { id: "boss_5",    label: "5 Boss Battles Fought", check: s => s.bossCount >= 5 },
+  { id: "boss_20",   label: "20 Boss Battles Fought", check: s => s.bossCount >= 20 },
+  { id: "balanced",  label: "Well-Rounded Operator", check: s => {
+      const vals = Object.values(s.stats);
+      return Math.min(...vals) >= 50 && (Math.max(...vals) - Math.min(...vals)) <= 10;
+    } },
+];
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    const d = defaultState();
+    return {
+      ...d,
+      ...parsed,
+      stats: { ...d.stats, ...(parsed.stats || {}) },
+      statLastDone: { ...d.statLastDone, ...(parsed.statLastDone || {}) },
+      rewards: parsed.rewards && parsed.rewards.length ? parsed.rewards : d.rewards,
+      achievements: parsed.achievements || {},
+      history: parsed.history || {},
+      journal: parsed.journal || {},
+    };
+  } catch (e) {
+    return defaultState();
+  }
+}
+
+function saveState(s) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+  catch (e) { console.error("save failed", e); }
+}
+
+let state = loadState();
+
+function questListForDate(date) {
+  return [...CORE_QUESTS, ...PHASE_QUESTS[getPhase(date)]];
+}
+
+function rolloverIfNewDay() {
+  const now = new Date();
+  const today = todayStr(now);
+  if (state.lastDate && state.lastDate !== today) {
+    const coreIds = CORE_QUESTS.map(q => q.id);
+    const coreAllDone = coreIds.every(id => state.todayQuests[id]);
+
+    const lastDateObj = new Date(state.lastDate + "T00:00:00");
+    const totalQuestsLastDay = questListForDate(lastDateObj).length;
+    const doneLastDay = Object.keys(state.todayQuests).length;
+    state.history[state.lastDate] = { done: doneLastDay, total: totalQuestsLastDay };
+
+    if (coreAllDone) {
+      state.streak += 1;
+      state.bestStreak = Math.max(state.bestStreak, state.streak);
+      state.discipline = Math.min(100, state.discipline + 6);
+    } else {
+      state.streak = 0;
+      state.discipline = Math.max(0, state.discipline - 10);
+    }
+
+    // Atrophy: a stat that's gone untouched for 3+ days quietly erodes.
+    // This never reaches back into total XP or level — it only affects
+    // the current-condition readout, so past progress is never erased.
+    const decayedStats = [];
+    Object.keys(state.stats).forEach(key => {
+      const lastDone = state.statLastDone[key];
+      if (!lastDone) return; // never started yet — no penalty for that
+      const daysSince = Math.floor((new Date(today + "T00:00:00") - new Date(lastDone + "T00:00:00")) / 86400000);
+      if (daysSince >= 3) {
+        state.stats[key] = Math.max(5, state.stats[key] - 3);
+        decayedStats.push(key);
+      }
+    });
+    state.lastPenaltyNote = decayedStats.length
+      ? `Atrophy: ${decayedStats.map(k => STAT_NAMES[k]).join(", ")} eroded from neglect (3+ days untouched).`
+      : null;
+
+    state.totalDays += 1;
+    state.todayQuests = {};
+  }
+  state.lastDate = today;
+}
+
+function toggleQuest(id, quest) {
+  const now = new Date();
+  const isDone = !!state.todayQuests[id];
+  if (isDone) {
+    delete state.todayQuests[id];
+    state.totalXP = Math.max(0, state.totalXP - quest.xp);
+    state.stats[quest.stat] = Math.max(0, state.stats[quest.stat] - quest.xp);
+    state.essence = Math.max(0, state.essence - Math.round(quest.xp / 3));
+  } else {
+    state.todayQuests[id] = true;
+    state.totalXP += quest.xp;
+    state.stats[quest.stat] += quest.xp;
+    state.statLastDone[quest.stat] = todayStr(now);
+    state.essence += Math.round(quest.xp / 3);
+  }
+  saveState(state);
+  render();
+}
+
+function openBossModal() {
+  document.getElementById("bossModal").classList.add("open");
+}
+function closeBossModal() {
+  document.getElementById("bossModal").classList.remove("open");
+  document.getElementById("bossScoreInput").value = "";
+}
+function submitBoss() {
+  const val = parseFloat(document.getElementById("bossScoreInput").value);
+  if (isNaN(val) || val < 0 || val > 100) return;
+  const bonus = 15 + Math.round(val / 2);
+  state.totalXP += bonus;
+  state.stats.INT += Math.round(bonus * 0.6);
+  state.stats.WIS += Math.round(bonus * 0.4);
+  state.bossWeek = weekId(new Date());
+  state.bossCount += 1;
+  state.essence += 25;
+  saveState(state);
+  closeBossModal();
+  render();
+}
+
+function redeemReward(id) {
+  const reward = state.rewards.find(r => r.id === id);
+  if (!reward || state.essence < reward.cost) return;
+  state.essence -= reward.cost;
+  reward.redeemed = (reward.redeemed || 0) + 1;
+  saveState(state);
+  render();
+}
+
+function deleteReward(id) {
+  state.rewards = state.rewards.filter(r => r.id !== id);
+  saveState(state);
+  render();
+}
+
+function addPresetReward(name, cost) {
+  const alreadyAdded = state.rewards.some(r => r.name === name);
+  if (alreadyAdded) return;
+  state.rewards.push({ id: "r" + Date.now(), name, cost, redeemed: 0 });
+  saveState(state);
+  render();
+}
+
+function addReward() {
+  const nameInput = document.getElementById("newRewardName");
+  const costInput = document.getElementById("newRewardCost");
+  const name = nameInput.value.trim();
+  const cost = parseInt(costInput.value, 10);
+  if (!name || isNaN(cost) || cost <= 0) return;
+  state.rewards.push({ id: "r" + Date.now(), name, cost, redeemed: 0 });
+  nameInput.value = "";
+  costInput.value = "";
+  saveState(state);
+  render();
+}
+
+function getDayCompletion(dateStr, now) {
+  const today = todayStr(now);
+  if (dateStr === today) {
+    const total = questListForDate(now).length;
+    const done = Object.keys(state.todayQuests).length;
+    return { done, total, isToday: true };
+  }
+  const entry = state.history[dateStr];
+  if (!entry) return null;
+  return { ...entry, isToday: false };
+}
+
+function heatColor(entry) {
+  if (!entry || entry.total === 0) return "#141c2b";
+  const ratio = entry.done / entry.total;
+  if (ratio >= 1) return entry.isToday ? "#3b82f6" : "#2fae54";
+  if (ratio >= 0.5) return entry.isToday ? "#3b82f6" : "#7a9a2f";
+  if (ratio > 0) return entry.isToday ? "#3b82f6" : "#a37a1f";
+  return "#7a2a2a";
+}
+
+function renderWeeklySummary(now) {
+  const strip = document.getElementById("weekDayStrip");
+  strip.innerHTML = "";
+  let totalRatio = 0, ratioCount = 0, fullDays = 0;
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateStr = todayStr(d);
+    const entry = getDayCompletion(dateStr, now);
+    let ratio = null;
+    if (entry && entry.total > 0) {
+      ratio = entry.done / entry.total;
+      totalRatio += ratio;
+      ratioCount += 1;
+      if (ratio >= 1) fullDays += 1;
+    }
+    const cell = document.createElement("div");
+    cell.style.cssText = "flex:1;text-align:center;";
+    const box = document.createElement("div");
+    box.style.cssText = `height:26px;border-radius:5px;background:${heatColor(entry)};margin-bottom:4px;`;
+    const label = document.createElement("div");
+    label.style.cssText = "font-size:9px;color:#6c86ad;";
+    label.textContent = d.toLocaleDateString("en-US", { weekday: "narrow" });
+    cell.appendChild(box);
+    cell.appendChild(label);
+    strip.appendChild(cell);
+  }
+
+  const avgPct = ratioCount > 0 ? Math.round((totalRatio / ratioCount) * 100) : 0;
+  document.getElementById("weekCompletionPct").textContent = avgPct + "%";
+  document.getElementById("weekFullDays").textContent = fullDays + "/7";
+  document.getElementById("weekStreak").textContent = state.streak;
+  document.getElementById("weekDiscipline").textContent = state.discipline;
+
+  let msg;
+  if (ratioCount === 0) {
+    msg = "No quests logged yet this week — the week starts the moment you check off the first one.";
+  } else if (avgPct >= 85) {
+    msg = `Strong week — ${avgPct}% average completion with ${fullDays} full day(s). This is the consistency that shows up in an assessor's read of you. Keep the rhythm going.`;
+  } else if (avgPct >= 50) {
+    msg = `Solid but uneven week — ${avgPct}% average completion, ${fullDays} full day(s). Look at which days dipped and why; a small fix there compounds fast.`;
+  } else {
+    msg = `A rough week — ${avgPct}% average completion. That's fine, it happens. The only thing that matters now is today's quest list, not the last seven days.`;
+  }
+  document.getElementById("weeklySummaryText").textContent = msg;
+}
+
+function saveJournalEntry(text) {
+  const wk = weekId(new Date());
+  state.journal[wk] = text;
+  saveState(state);
+}
+
+function exportData() {
+  const bundle = {
+    __kind: "solo-leveling-full-backup",
+    __version: 2,
+    exportedAt: new Date().toISOString(),
+    system: state,
+    yearTracker: yearCells,
+    timerSettings: timerSettings,
+    theme: localStorage.getItem(THEME_KEY) || "blue",
+  };
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "solo-leveling-backup-" + todayStr(new Date()) + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!confirm("Import this backup? It will replace your current progress across System, Year Tracker, and Timer settings.")) return;
+
+      // Support both the new combined bundle format and the old System-only export
+      const isBundle = parsed.__kind === "solo-leveling-full-backup";
+      const sysData = isBundle ? parsed.system : parsed;
+
+      const d = defaultState();
+      state = {
+        ...d,
+        ...sysData,
+        stats: { ...d.stats, ...(sysData.stats || {}) },
+        statLastDone: { ...d.statLastDone, ...(sysData.statLastDone || {}) },
+        rewards: sysData.rewards && sysData.rewards.length ? sysData.rewards : d.rewards,
+        achievements: sysData.achievements || {},
+        history: sysData.history || {},
+        journal: sysData.journal || {},
+      };
+      saveState(state);
+
+      if (isBundle) {
+        if (parsed.yearTracker) {
+          yearCells = parsed.yearTracker;
+          saveYearCells(yearCells);
+          renderYearTracker();
+        }
+        if (parsed.timerSettings) {
+          if (parsed.timerSettings.work > 0) timerSettings.work = parsed.timerSettings.work;
+          if (parsed.timerSettings.break > 0) timerSettings.break = parsed.timerSettings.break;
+          try { localStorage.setItem(TIMER_SETTINGS_KEY, JSON.stringify(timerSettings)); } catch (err) {}
+          applyTimerSettingsUI();
+          if (!timerRunning) {
+            timerSeconds = timerMode === "work" ? timerSettings.work * 60 : timerSettings.break * 60;
+            timerRenderDisplay();
+          }
+        }
+        if (parsed.theme) applyTheme(parsed.theme);
+      }
+
+      render();
+      alert("Backup restored.");
+    } catch (err) {
+      alert("Couldn't read that file — make sure it's a backup exported from this tracker.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function checkAchievements() {
+  const newlyUnlocked = [];
+  BADGES.forEach(b => {
+    if (!state.achievements[b.id] && b.check(state)) {
+      state.achievements[b.id] = todayStr(new Date());
+      newlyUnlocked.push(b.label);
+    }
+  });
+  if (newlyUnlocked.length) saveState(state);
+  return newlyUnlocked;
+}
+
+function computePenaltyWatch(now) {
+  const todayD = todayStr(now);
+  const warnings = [];
+  Object.keys(state.stats).forEach(key => {
+    const lastDone = state.statLastDone[key];
+    if (!lastDone) return;
+    const daysSince = Math.floor((new Date(todayD + "T00:00:00") - new Date(lastDone + "T00:00:00")) / 86400000);
+    if (daysSince === 2) {
+      warnings.push(`${STAT_NAMES[key]} — 1 day left before it starts to erode. A single rep today resets the clock.`);
+    } else if (daysSince >= 3) {
+      warnings.push(`${STAT_NAMES[key]} — actively eroding from neglect (${daysSince}d untouched).`);
+    }
+  });
+
+  const parts = [];
+  if (state.discipline < 40) {
+    parts.push(`⚠ Discipline is low (${state.discipline}/100). This doesn't block anything — it's just an honest read of the last few days. A full core day starts rebuilding it immediately.`);
+  }
+  if (state.lastPenaltyNote) {
+    parts.push(state.lastPenaltyNote);
+  }
+  if (warnings.length) {
+    parts.push(...warnings);
+  }
+  if (!parts.length) {
+    parts.push("No penalties active. Every stat is within its 2-day grace window.");
+  }
+  return parts.join(" ");
+}
+
+function computeInsight(now) {
+  const phase = getPhase(now);
+  const stats = state.stats;
+  const entries = Object.entries(stats);
+  const max = entries.reduce((a, b) => (b[1] > a[1] ? b : a));
+  const min = entries.reduce((a, b) => (b[1] < a[1] ? b : a));
+  const gap = max[1] - min[1];
+
+  const info = getPhaseInfo(phase, now);
+  if (info.daysLeft !== undefined && info.daysLeft <= 3 && info.daysLeft >= 0) {
+    return `⚠ ${info.label} is ${info.daysLeft === 0 ? "today" : info.daysLeft + " day(s) away"}. Keep the load light and sharp — no new habits this close, just execution of what you already trust.`;
+  }
+
+  if (gap >= 25) {
+    const suggestions = {
+      STR: "a short strength session — even 20 minutes moves the needle",
+      VIT: "a run, even a short one — vitality compounds slower than it looks",
+      INT: "one focused study block today, no phone nearby",
+      WIS: "meditation or a quiet current-affairs read — mental fortitude needs quiet reps too",
+      CHA: "a Lecturette or mirror-practice rep — command presence needs repetition, not inspiration",
+    };
+    return `${STAT_NAMES[min[0]]} is lagging behind ${STAT_NAMES[max[0]]} by a fair margin. Today's a good day for ${suggestions[min[0]]}.`;
+  }
+
+  if (state.streak >= 7) {
+    return `${state.streak}-day streak. This is exactly the kind of consistency SSB assessors are trained to notice — quiet, repeated, unforced. Keep the rhythm, not the intensity.`;
+  }
+
+  if (state.streak === 0 && state.totalDays > 0) {
+    return `Streak reset — that's fine, it's data, not a verdict. One full day of the core five (wake, workout, run, meditate, sleep) starts the next one.`;
+  }
+
+  return `Stats are fairly balanced. Solid day to just execute the plan — nothing to overcorrect for.`;
+}
+
+const TIMER_SETTINGS_KEY = "solo-leveling-timer-settings";
+let timerSettings = { work: 25, break: 5 };
+
+function loadTimerSettings() {
+  try {
+    const raw = localStorage.getItem(TIMER_SETTINGS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.work > 0) timerSettings.work = parsed.work;
+      if (parsed.break > 0) timerSettings.break = parsed.break;
+    }
+  } catch (e) {}
+}
+loadTimerSettings();
+
+let timerSeconds = timerSettings.work * 60;
+let timerMode = "work";
+let timerInterval = null;
+let timerRunning = false;
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
+}
+
+function timerRenderDisplay() {
+  document.getElementById("timerDisplay").textContent = formatTime(timerSeconds);
+}
+
+function timerSetMode(mode) {
+  if (timerRunning) return;
+  timerMode = mode;
+  timerSeconds = mode === "work" ? timerSettings.work * 60 : timerSettings.break * 60;
+  document.getElementById("timerStatus").textContent = "";
+  timerRenderDisplay();
+}
+
+function timerToggle() {
+  const btn = document.getElementById("timerStartBtn");
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    btn.textContent = "START";
+    return;
+  }
+  timerRunning = true;
+  btn.textContent = "PAUSE";
+  timerInterval = setInterval(() => {
+    timerSeconds -= 1;
+    timerRenderDisplay();
+    if (timerSeconds <= 0) {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      btn.textContent = "START";
+      playBeep();
+      document.getElementById("timerStatus").textContent =
+        timerMode === "work" ? "Session complete — take a break if you need one." : "Break's over — back to it when ready.";
+      timerSeconds = timerMode === "work" ? timerSettings.work * 60 : timerSettings.break * 60;
+      timerRenderDisplay();
+    }
+  }, 1000);
+}
+
+function timerReset() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  document.getElementById("timerStartBtn").textContent = "START";
+  timerSeconds = timerMode === "work" ? timerSettings.work * 60 : timerSettings.break * 60;
+  document.getElementById("timerStatus").textContent = "";
+  timerRenderDisplay();
+}
+
+function applyTimerSettingsUI() {
+  document.getElementById("workMinBtn").textContent = timerSettings.work + " min";
+  document.getElementById("breakMinBtn").textContent = timerSettings.break + " min";
+  document.getElementById("customWorkInput").value = timerSettings.work;
+  document.getElementById("customBreakInput").value = timerSettings.break;
+}
+
+function toggleTimerCustomize() {
+  const row = document.getElementById("timerCustomizeRow");
+  const isHidden = row.style.display === "none" || !row.style.display;
+  row.style.display = isHidden ? "flex" : "none";
+}
+
+function saveTimerCustomize() {
+  const w = parseInt(document.getElementById("customWorkInput").value, 10);
+  const b = parseInt(document.getElementById("customBreakInput").value, 10);
+  if (w > 0) timerSettings.work = w;
+  if (b > 0) timerSettings.break = b;
+  try { localStorage.setItem(TIMER_SETTINGS_KEY, JSON.stringify(timerSettings)); } catch (e) {}
+  applyTimerSettingsUI();
+  if (!timerRunning) {
+    timerSeconds = timerMode === "work" ? timerSettings.work * 60 : timerSettings.break * 60;
+    timerRenderDisplay();
+  }
+  document.getElementById("timerCustomizeRow").style.display = "none";
+}
+
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 660;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.35);
+  } catch (e) { /* audio not available, silently skip */ }
+}
+
+function render() {
+  rolloverIfNewDay();
+  saveState(state);
+
+  const now = new Date();
+  const { level, into, needed } = levelFromXP(state.totalXP);
+  const rank = rankFromLevel(level);
+
+  document.getElementById("playerTitle").textContent = rank.title;
+  document.getElementById("rankBadge").textContent = rank.code;
+  document.getElementById("levelLabel").textContent = "Level " + level;
+  document.getElementById("xpLabel").textContent = into + " / " + needed + " XP";
+  document.getElementById("xpBarFill").style.width = Math.min(100, (into / needed) * 100) + "%";
+
+  document.getElementById("disciplineLabel").textContent = state.discipline + " / 100";
+  document.getElementById("disciplineBarFill").style.width = state.discipline + "%";
+  const dFill = document.getElementById("disciplineBarFill");
+  dFill.style.background = state.discipline < 40
+    ? "linear-gradient(90deg,#7a1f2b,#c0463c)"
+    : "linear-gradient(90deg,#3b82f6,#7fc3ff)";
+  dFill.style.boxShadow = state.discipline < 40 ? "0 0 8px #c0463c" : "0 0 8px #3b82f6";
+
+  const statGrid = document.getElementById("statGrid");
+  statGrid.innerHTML = "";
+  Object.keys(state.stats).forEach(key => {
+    const val = state.stats[key];
+    const pct = Math.min(100, val / 2);
+    const box = document.createElement("div");
+    box.className = "stat-box";
+    box.innerHTML = `
+      <div class="stat-name"><span>${STAT_NAMES[key]}</span></div>
+      <div class="stat-val">${val}</div>
+      <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${pct}%;background:${STAT_COLORS[key]}"></div></div>
+    `;
+    statGrid.appendChild(box);
+  });
+
+  document.getElementById("streakNum").textContent = state.streak;
+  document.getElementById("bestStreakNum").textContent = state.bestStreak;
+  document.getElementById("totalDaysNum").textContent = state.totalDays;
+
+  const phase = getPhase(now);
+  const info = getPhaseInfo(phase, now);
+  let banner = info.name;
+  if (info.daysLeft !== undefined) banner += " · " + info.daysLeft + " day(s) to " + info.label;
+  document.getElementById("phaseBanner").textContent = banner;
+
+  const questList = document.getElementById("questList");
+  questList.innerHTML = "";
+  const allQuests = questListForDate(now);
+  allQuests.forEach(q => {
+    const done = !!state.todayQuests[q.id];
+    const row = document.createElement("div");
+    row.className = "quest";
+    row.innerHTML = `
+      <input type="checkbox" ${done ? "checked" : ""} />
+      <div class="quest-label ${done ? "done" : ""}">${q.label}<span class="quest-tag">${q.stat}</span></div>
+      <div class="quest-xp">+${q.xp} xp</div>
+    `;
+    row.addEventListener("click", (e) => {
+      e.preventDefault();
+      toggleQuest(q.id, q);
+    });
+    questList.appendChild(row);
+  });
+
+  const currentWeek = weekId(now);
+  const bossBtn = document.getElementById("bossBtn");
+  if (state.bossWeek === currentWeek) {
+    bossBtn.disabled = true;
+    bossBtn.textContent = "⚔ Boss defeated this week";
+  } else {
+    bossBtn.disabled = false;
+    bossBtn.textContent = "⚔ Weekly Boss Battle — Log a Mock Test";
+  }
+
+  document.getElementById("penaltyBox").textContent = computePenaltyWatch(now);
+
+  const heatmapGrid = document.getElementById("heatmapGrid");
+  const heatmapMonths = document.getElementById("heatmapMonths");
+  heatmapGrid.innerHTML = "";
+  heatmapMonths.innerHTML = "";
+  const startDate = new Date(2026, 6, 8);
+  const endDate = new Date(2027, 6, 8);
+  const startDow = (startDate.getDay() + 6) % 7;
+  let cursor = new Date(startDate);
+  cursor.setDate(cursor.getDate() - startDow);
+  let lastMonthLabeled = -1;
+  while (cursor < endDate) {
+    const colStart = new Date(cursor);
+    const monthLabel = document.createElement("div");
+    monthLabel.style.width = "12px";
+    let labelText = "";
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(cursor);
+      if (d.getDate() <= 7 && d.getMonth() !== lastMonthLabeled && d >= startDate && d < endDate) {
+        labelText = d.toLocaleString("default", { month: "short" });
+        lastMonthLabeled = d.getMonth();
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    monthLabel.textContent = labelText;
+    heatmapMonths.appendChild(monthLabel);
+
+    const col = document.createElement("div");
+    col.style.cssText = "display:flex;flex-direction:column;gap:2px;";
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(colStart);
+      d.setDate(d.getDate() + i);
+      const cell = document.createElement("div");
+      cell.style.cssText = "width:10px;height:10px;border-radius:2px;";
+      if (d >= startDate && d < endDate) {
+        const ds = todayStr(d);
+        const entry = getDayCompletion(ds, now);
+        cell.style.background = heatColor(entry);
+        cell.title = ds + (entry ? " — " + entry.done + "/" + entry.total + " quests" : " — no data");
+      } else {
+        cell.style.background = "transparent";
+      }
+      col.appendChild(cell);
+    }
+    heatmapGrid.appendChild(col);
+  }
+
+  const wk = weekId(now);
+  const journalInput = document.getElementById("journalInput");
+  if (document.activeElement !== journalInput) {
+    journalInput.value = state.journal[wk] || "";
+  }
+  const pastJournalList = document.getElementById("pastJournalList");
+  pastJournalList.innerHTML = "";
+  const pastWeeks = Object.keys(state.journal).filter(w => w !== wk).sort().reverse().slice(0, 8);
+  pastWeeks.forEach(w => {
+    const entry = document.createElement("div");
+    entry.style.cssText = "font-size:12px;color:#9db6da;border-bottom:1px dashed #1c3050;padding:6px 0;";
+    entry.innerHTML = "<span style=\"color:#5c7699;font-size:10px;\">" + w + "</span><br/>" + state.journal[w];
+    pastJournalList.appendChild(entry);
+  });
+
+  const newlyUnlocked = checkAchievements();
+
+  document.getElementById("essenceLabel").textContent = state.essence;
+  const presetGrid = document.getElementById("presetGrid");
+  presetGrid.innerHTML = "";
+  PRESET_REWARDS.forEach(p => {
+    const alreadyAdded = state.rewards.some(r => r.name === p.name);
+    const chip = document.createElement("button");
+    chip.style.cssText = `
+      background:${alreadyAdded ? "#1a2436" : "#152238"};
+      border:1px solid ${alreadyAdded ? "#22314a" : "#2a4a7a"};
+      color:${alreadyAdded ? "#5c7699" : "#cfe3ff"};
+      border-radius:14px; padding:6px 11px; font-size:11px; cursor:${alreadyAdded ? "default" : "pointer"};
+    `;
+    chip.disabled = alreadyAdded;
+    chip.textContent = `${p.name} · ${p.cost}`;
+    if (!alreadyAdded) chip.addEventListener("click", () => addPresetReward(p.name, p.cost));
+    presetGrid.appendChild(chip);
+  });
+
+  const rewardList = document.getElementById("rewardList");
+  rewardList.innerHTML = "";
+  state.rewards.forEach(r => {
+    const affordable = state.essence >= r.cost;
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dashed #1c3050;";
+    row.innerHTML = `
+      <div style="flex:1;font-size:13px;color:#dbe9ff;">${r.name}${r.redeemed ? `<span style="color:#5c7699;font-size:10px;"> · redeemed ${r.redeemed}x</span>` : ""}</div>
+      <div style="font-size:11px;color:#ffd166;font-family:'Orbitron',sans-serif;">${r.cost}</div>
+      <button onclick="redeemRewardUI('${r.id}')" ${affordable ? "" : "disabled"} style="background:${affordable ? "#3b82f6" : "#22314a"};border:none;color:#fff;border-radius:5px;padding:5px 9px;font-size:10px;cursor:${affordable ? "pointer" : "default"};">Redeem</button>
+      <button onclick="deleteRewardUI('${r.id}')" style="background:none;border:none;color:#5c7699;cursor:pointer;font-size:14px;">×</button>
+    `;
+    rewardList.appendChild(row);
+  });
+
+  const achievementGrid = document.getElementById("achievementGrid");
+  achievementGrid.innerHTML = "";
+  BADGES.forEach(b => {
+    const unlocked = !!state.achievements[b.id];
+    const box = document.createElement("div");
+    box.className = "stat-box";
+    box.style.opacity = unlocked ? "1" : "0.35";
+    box.innerHTML = `
+      <div class="stat-name"><span>${unlocked ? "🏅" : "🔒"} ${b.label}</span></div>
+      ${unlocked ? `<div style="font-size:10px;color:#5c7699;margin-top:3px;">Unlocked ${state.achievements[b.id]}</div>` : ""}
+    `;
+    achievementGrid.appendChild(box);
+  });
+
+  if (newlyUnlocked.length) {
+    document.getElementById("insightBox").textContent =
+      `🏅 Achievement unlocked: ${newlyUnlocked.join(", ")}. ` + computeInsight(now);
+  } else {
+    document.getElementById("insightBox").textContent = computeInsight(now);
+  }
+
+  renderWeeklySummary(now);
+}
+
+function redeemRewardUI(id) { redeemReward(id); }
+function deleteRewardUI(id) { deleteReward(id); }
+
+document.getElementById("journalInput").addEventListener("input", (e) => {
+  saveJournalEntry(e.target.value);
+});
+
+document.getElementById("importFileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (file) importData(file);
+  e.target.value = "";
+});
+
+document.getElementById("customToggleLink").addEventListener("click", () => {
+  const row = document.getElementById("customAddRow");
+  const isHidden = row.style.display === "none" || !row.style.display;
+  row.style.display = isHidden ? "flex" : "none";
+});
+
+document.getElementById("bossBtn").addEventListener("click", () => {
+  if (!document.getElementById("bossBtn").disabled) openBossModal();
+});
+document.getElementById("resetLink").addEventListener("click", () => {
+  if (confirm("Reset ALL progress — level, XP, stats, streaks? This cannot be undone.")) {
+    state = defaultState();
+    saveState(state);
+    render();
+  }
+});
+
+timerRenderDisplay();
+applyTimerSettingsUI();
+render();
+
+/* ===================== YEAR TRACKER ===================== */
+
+const YEAR_STORAGE_KEY = "year-tracker-jul2026-jul2027";
+const YEAR_MONTHS = [
+  { name: "Jul", year: 2026, month: 6 },
+  { name: "Aug", year: 2026, month: 7 },
+  { name: "Sep", year: 2026, month: 8 },
+  { name: "Oct", year: 2026, month: 9 },
+  { name: "Nov", year: 2026, month: 10 },
+  { name: "Dec", year: 2026, month: 11 },
+  { name: "Jan", year: 2027, month: 0 },
+  { name: "Feb", year: 2027, month: 1 },
+  { name: "Mar", year: 2027, month: 2 },
+  { name: "Apr", year: 2027, month: 3 },
+  { name: "May", year: 2027, month: 4 },
+  { name: "Jun", year: 2027, month: 5 },
+];
+
+const Y_CX = 260, Y_CY = 270, Y_R0 = 42, Y_R_MAX = 240, Y_MAX_RINGS = 31;
+const Y_RING_W = (Y_R_MAX - Y_R0) / Y_MAX_RINGS;
+const Y_SECTOR_DEG = 360 / 12;
+const Y_GAP_DEG = 2.2;
+const YEAR_COLORS = { none: "#23262b", red: "#c0463c", blue: "#3b82f6", yellow: "#eab308", green: "#3fae54" };
+const YEAR_CYCLE = ["none", "red", "blue", "yellow", "green"];
+
+function yearDaysInMonth(year, month) {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function yearPolarTop(r, angleDeg) {
+  const rad = (angleDeg * Math.PI) / 180;
+  return { x: Y_CX + r * Math.sin(rad), y: Y_CY - r * Math.cos(rad) };
+}
+
+function yearAnnularSectorPath(r1, r2, a1, a2) {
+  const largeArc = a2 - a1 > 180 ? 1 : 0;
+  const p1 = yearPolarTop(r2, a1), p2 = yearPolarTop(r2, a2);
+  const p3 = yearPolarTop(r1, a2), p4 = yearPolarTop(r1, a1);
+  return `M ${p1.x.toFixed(2)} ${p1.y.toFixed(2)} A ${r2} ${r2} 0 ${largeArc} 1 ${p2.x.toFixed(2)} ${p2.y.toFixed(2)} L ${p3.x.toFixed(2)} ${p3.y.toFixed(2)} A ${r1} ${r1} 0 ${largeArc} 0 ${p4.x.toFixed(2)} ${p4.y.toFixed(2)} Z`;
+}
+
+function yearCellKey(year, month, day) { return `${year}-${month}-${day}`; }
+
+function loadYearCells() {
+  try {
+    const raw = localStorage.getItem(YEAR_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+
+function saveYearCells(cells) {
+  try { localStorage.setItem(YEAR_STORAGE_KEY, JSON.stringify(cells)); }
+  catch (e) { console.error("Could not save:", e); }
+}
+
+let yearCells = loadYearCells();
+
+function toggleYearCell(key) {
+  const current = yearCells[key] || "none";
+  const idx = YEAR_CYCLE.indexOf(current);
+  const next = YEAR_CYCLE[(idx + 1) % YEAR_CYCLE.length];
+  if (next === "none") delete yearCells[key];
+  else yearCells[key] = next;
+  saveYearCells(yearCells);
+  renderYearTracker();
+}
+
+function resetYearAll() {
+  if (confirm("Clear all tracked days on the Year Tracker? This cannot be undone.")) {
+    yearCells = {};
+    saveYearCells(yearCells);
+    renderYearTracker();
+  }
+}
+
+const yearSvg = document.getElementById("yearSvg");
+const Y_NS = "http://www.w3.org/2000/svg";
+
+function yEl(tag, attrs) {
+  const e = document.createElementNS(Y_NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+function renderYearTracker() {
+  yearSvg.innerHTML = "";
+
+  yearSvg.appendChild(yEl("circle", { cx: Y_CX, cy: Y_CY, r: Y_R_MAX, fill: "#111214", stroke: "#2a2d33", "stroke-width": 1 }));
+  yearSvg.appendChild(yEl("circle", { cx: Y_CX, cy: Y_CY, r: Y_R0 - 1, fill: "#000", stroke: "#2a2d33", "stroke-width": 1 }));
+
+  let green = 0, yellow = 0, blue = 0, red = 0;
+
+  YEAR_MONTHS.forEach((m, mi) => {
+    const dCount = yearDaysInMonth(m.year, m.month);
+    const sectorStart = mi * Y_SECTOR_DEG + Y_GAP_DEG / 2;
+    const sectorEnd = (mi + 1) * Y_SECTOR_DEG - Y_GAP_DEG / 2;
+    for (let d = 1; d <= dCount; d++) {
+      const r1 = Y_R0 + (d - 1) * Y_RING_W;
+      const r2 = Y_R0 + d * Y_RING_W;
+      const key = yearCellKey(m.year, m.month, d);
+      const state = yearCells[key] || "none";
+      if (state === "green") green++;
+      if (state === "yellow") yellow++;
+      if (state === "blue") blue++;
+      if (state === "red") red++;
+      const path = yEl("path", {
+        d: yearAnnularSectorPath(r1, r2, sectorStart, sectorEnd),
+        fill: YEAR_COLORS[state],
+        class: "cell",
+        style: "cursor:pointer;stroke:#000;stroke-width:0.6;",
+      });
+      path.addEventListener("click", () => toggleYearCell(key));
+      yearSvg.appendChild(path);
+    }
+
+    const mid = mi * Y_SECTOR_DEG + Y_SECTOR_DEG / 2;
+    const pos = yearPolarTop(Y_R_MAX + 18, mid);
+    const label = yEl("text", {
+      x: pos.x, y: pos.y, fill: "#e5e7eb", "font-size": 13, "font-weight": 600,
+      "text-anchor": "middle", "dominant-baseline": "middle",
+    });
+    label.textContent = m.name;
+    yearSvg.appendChild(label);
+  });
+
+  [1, 5, 10, 15, 20, 25, 31].forEach((d) => {
+    const r = Y_R0 + (d - 0.5) * Y_RING_W;
+    const pos = yearPolarTop(r, -8);
+    const t = yEl("text", {
+      x: pos.x, y: pos.y, fill: "#6b7280", "font-size": 8, "text-anchor": "middle", "dominant-baseline": "middle",
+    });
+    t.textContent = d;
+    yearSvg.appendChild(t);
+  });
+
+  const t1 = yEl("text", { x: Y_CX, y: Y_CY - 6, fill: "#fff", "font-size": 15, "font-weight": 700, "text-anchor": "middle" });
+  t1.textContent = "2026";
+  yearSvg.appendChild(t1);
+  const t2 = yEl("text", { x: Y_CX, y: Y_CY + 14, fill: "#9ca3af", "font-size": 11, "text-anchor": "middle" });
+  t2.textContent = "– 2027";
+  yearSvg.appendChild(t2);
+
+  document.getElementById("statGreen").textContent = green;
+  document.getElementById("statYellow").textContent = yellow;
+  document.getElementById("statBlue").textContent = blue;
+  document.getElementById("statRed").textContent = red;
+  document.getElementById("statLeft").textContent = 365 - (green + yellow + blue + red);
+}
+
+document.getElementById("yearResetLink").addEventListener("click", resetYearAll);
+
+/* Restore last active tab (defaults to System) */
+const savedTab = localStorage.getItem(TAB_KEY);
+if (savedTab === "year") {
+  switchTab("year");
+} else {
+  renderYearTracker(); // pre-render so it's ready the instant user switches tabs
+}
+
+/* PWA: register service worker for offline use (only works when served over http/https, not file://) */
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js").catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
